@@ -1,0 +1,6 @@
+{
+  "name": "ElevatorOps - Smart Route Maintenance",
+  "description": "Elevator maintenance operations platform with intelligent route clustering, site allocation, on-site inspection logging, and Excel/email reporting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
