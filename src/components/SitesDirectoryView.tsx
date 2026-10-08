@@ -26,11 +26,13 @@ import {
   User,
   ShieldAlert,
   Eye,
+  Upload,
 } from 'lucide-react';
 import { exportSitesToCsv } from '../utils/exportReport';
 import { buildSingleSiteMapUrl } from '../utils/geo';
 import { SiteMapIcon } from './SiteMapIcon';
 import { LocationPreviewModal } from './LocationPreviewModal';
+import { BatchImportModal } from './BatchImportModal';
 
 interface SitesDirectoryViewProps {
   sites: BuildingSite[];
@@ -40,6 +42,7 @@ interface SitesDirectoryViewProps {
   onOpenAddSite: () => void;
   onDeleteSite: (siteId: string) => void;
   onReassignSite: (siteId: string, newEmail: string) => void;
+  onBatchImport: (newSites: BuildingSite[], updateExisting: boolean) => void;
 }
 
 export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
@@ -50,6 +53,7 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
   onOpenAddSite,
   onDeleteSite,
   onReassignSite,
+  onBatchImport,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'visited' | 'pending' | 'issues'>('all');
@@ -59,6 +63,7 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
   const [sortBy, setSortBy] = useState<'name' | 'neighborhood' | 'units' | 'status'>('neighborhood');
   const [sortAsc, setSortAsc] = useState(true);
   const [previewLocationSite, setPreviewLocationSite] = useState<BuildingSite | null>(null);
+  const [isBatchImportOpen, setIsBatchImportOpen] = useState(false);
 
   // Extract unique neighborhoods
   const neighborhoods = useMemo(() => {
@@ -197,6 +202,15 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsBatchImportOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition-colors shadow-xs"
+              title="Mass-add or update building sites from Excel, CSV, clipboard or WhatsApp"
+            >
+              <Upload className="w-3.5 h-3.5 text-blue-600" />
+              <span>Import Dataset</span>
+            </button>
+
             <button
               onClick={handleExportCsv}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
@@ -705,6 +719,15 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
         isOpen={Boolean(previewLocationSite)}
         onClose={() => setPreviewLocationSite(null)}
         onOpenInspect={onOpenInspect}
+      />
+
+      {/* Mass Batch Import Modal (CSV, Excel, WhatsApp, Clipboard) */}
+      <BatchImportModal
+        isOpen={isBatchImportOpen}
+        onClose={() => setIsBatchImportOpen(false)}
+        existingSites={sites}
+        currentTechnician={currentTechnician}
+        onBatchSave={onBatchImport}
       />
     </div>
   );

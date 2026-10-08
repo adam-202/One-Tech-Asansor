@@ -121,18 +121,18 @@ export function generateEmailReport(data: ReportSummaryData): { subject: string;
 
   const criticalSection =
     data.criticalIssues.length > 0
-      ? `\n⚠️ CRITICAL SAFETY / EMERGENCY CALLOUTS (${data.criticalIssues.length}):\n` +
+      ? `\n[!] CRITICAL SAFETY / EMERGENCY CALLOUTS (${data.criticalIssues.length}):\n` +
         data.criticalIssues
           .map(
             (s) =>
               `- ${s.name} (${s.address})\n  Units: ${s.elevatorUnits} [${s.elevatorNumbers || 'Lifts'}] | Team: ${Array.isArray(s.lastVisit?.attendingTechnicians) ? s.lastVisit.attendingTechnicians.join(', ') : s.lastVisit?.technicianName || 'Specialist'}\n  Parts Replaced: ${s.lastVisit?.partsReplaced || 'None'}\n  Diagnostic Note: ${s.lastVisit?.notes || 'Requires immediate shutdown investigation'}`
           )
           .join('\n\n')
-      : '\n✅ CRITICAL DEFECTS: None reported. All active elevators running in nominal safety limits.';
+      : '\n[OK] CRITICAL DEFECTS: None reported. All active elevators running in nominal safety limits.';
 
   const attentionSection =
     data.attentionNeeded.length > 0
-      ? `\n📋 FAULT / MINOR REPAIRS LOGGED (${data.attentionNeeded.length}):\n` +
+      ? `\n[i] FAULT / MINOR REPAIRS LOGGED (${data.attentionNeeded.length}):\n` +
         data.attentionNeeded
           .slice(0, 5)
           .map(
@@ -144,14 +144,14 @@ export function generateEmailReport(data: ReportSummaryData): { subject: string;
 
   const completedTodayList =
     data.completedTodaySites.length > 0
-      ? `\n📍 RECENT VISITS LOGGED TODAY (${data.completedTodaySites.length}):\n` +
+      ? `\n[+] RECENT VISITS LOGGED TODAY (${data.completedTodaySites.length}):\n` +
         data.completedTodaySites
           .map(
             (s, idx) =>
               `${idx + 1}. [${s.lastVisit?.time || 'Visited'}] ${s.name} - ${s.elevatorUnits} Lifts | Type: ${String(s.lastVisit?.visitType || 'monthly').toUpperCase()} | Team: ${Array.isArray(s.lastVisit?.attendingTechnicians) ? s.lastVisit.attendingTechnicians.join(', ') : s.lastVisit?.technicianName || 'Specialist'}`
           )
           .join('\n')
-      : '\n📍 RECENT VISITS LOGGED TODAY: None recorded on this shift yet.';
+      : '\n[+] RECENT VISITS LOGGED TODAY: None recorded on this shift yet.';
 
   const body = `ELEVATOR OPERATIONS FIELD DISPATCH REPORT
 ----------------------------------------------------
@@ -162,7 +162,7 @@ Primary Specialist: ${data.technicianName} <${data.technicianEmail}>
 
 KEY PERFORMANCE METRICS:
 - Total Assigned Sites: ${data.totalAssigned}
-- Completed Visits (October 2026): ${data.visitedCount}
+- Completed Visits: ${data.visitedCount}
 - Pending Sites Remaining: ${data.pendingCount}
 - Monthly Route Completion: ${data.completionRate.toFixed(1)}%
 

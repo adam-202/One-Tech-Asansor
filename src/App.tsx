@@ -177,6 +177,43 @@ export default function App() {
     showToast(`Reassigned site to ${tech?.name || newEmail}.`);
   };
 
+  // Handle mass-batch import of building sites from Excel, CSV, or WhatsApp
+  const handleBatchImport = (importedSites: BuildingSite[], updateExisting: boolean) => {
+    setSites((prev) => {
+      const existingIdMap = new Map(prev.map((s) => [s.id, s]));
+      const existingNameMap = new Map(prev.map((s) => [s.name.toLowerCase().trim(), s]));
+
+      let addedCount = 0;
+      let updatedCount = 0;
+
+      const result = [...prev];
+
+      importedSites.forEach((imported) => {
+        const match = existingIdMap.get(imported.id) || existingNameMap.get(imported.name.toLowerCase().trim());
+
+        if (match && updateExisting) {
+          const idx = result.findIndex((s) => s.id === match.id);
+          if (idx !== -1) {
+            result[idx] = {
+              ...match,
+              ...imported,
+              id: match.id,
+              lastVisit: match.lastVisit,
+              visitHistory: match.visitHistory,
+            };
+            updatedCount++;
+          }
+        } else if (!match) {
+          result.push(imported);
+          addedCount++;
+        }
+      });
+
+      showToast(`Batch import complete: ${addedCount} new sites added, ${updatedCount} existing updated.`);
+      return result;
+    });
+  };
+
   // Reset to initial demo data
   const handleResetData = () => {
     setSites(INITIAL_SITES);
@@ -232,6 +269,7 @@ export default function App() {
             }}
             onDeleteSite={handleDeleteSite}
             onReassignSite={handleReassignSite}
+            onBatchImport={handleBatchImport}
           />
         )}
 

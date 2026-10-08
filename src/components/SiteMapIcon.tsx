@@ -49,19 +49,11 @@ export const SiteMapIcon: React.FC<SiteMapIconProps> = ({
         className="w-full h-full block"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <defs>
-          <pattern id={`miniGrid-${site.id}`} width="12" height="12" patternUnits="userSpaceOnUse">
-            <path
-              d="M 12 0 L 0 0 0 12"
-              fill="none"
-              stroke="rgba(255,255,255,0.08)"
-              strokeWidth="0.8"
-            />
-          </pattern>
-        </defs>
-
-        {/* Base Grid */}
-        <rect width="60" height="60" fill={`url(#miniGrid-${site.id})`} />
+        {/* Subtle grid lines */}
+        <line x1="15" y1="0" x2="15" y2="60" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" />
+        <line x1="45" y1="0" x2="45" y2="60" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" />
+        <line x1="0" y1="15" x2="60" y2="15" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" />
+        <line x1="0" y1="45" x2="60" y2="45" stroke="rgba(255,255,255,0.06)" strokeWidth="0.8" />
 
         {/* Street Lines */}
         <line x1="0" y1="28" x2="60" y2="28" stroke="rgba(255,255,255,0.22)" strokeWidth="4" />

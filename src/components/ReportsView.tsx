@@ -60,7 +60,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ sites, currentTechnici
   }, [targetSites]);
 
   // Today's completed sites (for Daily wrap-up)
-  const todayStr = '2026-10-03';
+  const todayStr = new Date().toISOString().slice(0, 10);
   const completedToday = useMemo(() => {
     return targetSites.filter(
       (s) => s.lastVisit && (s.lastVisit.date === todayStr || s.lastVisit.date === '2026-10-02')

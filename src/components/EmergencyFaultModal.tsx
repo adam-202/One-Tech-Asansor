@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BuildingSite, VisitRecord, InspectionStatus } from '../types';
 import { TECHNICIANS } from '../data/seedSites';
 import {
@@ -33,6 +33,8 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
   technicianName,
   onSaveFault,
 }) => {
+  if (!isOpen) return null;
+
   const [selectedSiteId, setSelectedSiteId] = useState<string>(sites[0]?.id || '');
   const [siteSearch, setSiteSearch] = useState<string>('');
   const [severity, setSeverity] = useState<'fault' | 'emergency'>('fault');
@@ -40,6 +42,17 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
   const [issueSummary, setIssueSummary] = useState<string>('');
   const [partsReplaced, setPartsReplaced] = useState<string>('');
   const [attendingTechs, setAttendingTechs] = useState<string[]>([technicianName]);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   // Filter sites for search dropdown
   const filteredSites = sites.filter((s) => {
@@ -105,8 +118,15 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-950/80 backdrop-blur-xs">
-      <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-rose-200 overflow-hidden my-6">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-950/80 backdrop-blur-xs cursor-pointer"
+    >
+      <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-rose-200 overflow-hidden my-6 cursor-default">
         {/* Urgent Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-rose-950 text-white border-b border-rose-900">
           <div className="flex items-center gap-2.5">
