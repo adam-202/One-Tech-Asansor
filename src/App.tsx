@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BuildingSite, Technician, VisitRecord } from './types';
-import { INITIAL_SITES, TECHNICIANS } from './data/seedSites';
+import { INITIAL_SITES, INITIAL_TECHNICIANS } from './data/seedSites';
 import { TopNav } from './components/TopNav';
 import { RoutePlannerView } from './components/RoutePlannerView';
 import { SitesDirectoryView } from './components/SitesDirectoryView';
@@ -13,15 +13,86 @@ import { ReportsView } from './components/ReportsView';
 import { VisitInspectionModal } from './components/VisitInspectionModal';
 import { SiteModal } from './components/SiteModal';
 import { EmergencyFaultModal } from './components/EmergencyFaultModal';
-import { CheckCircle2, RotateCcw, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { AdminPortal } from './components/AdminPortal';
+import { SupabaseConnectModal } from './components/SupabaseConnectModal';
+import { CheckCircle2, RotateCcw } from 'lucide-react';
+import { Language, translations } from './utils/translations';
+import { isSupabaseConfigured, testSupabaseConnection } from './utils/supabase';
+import {
+  fetchSitesFromSupabase,
+  fetchTechniciansFromSupabase,
+  upsertSiteToSupabase,
+  deleteSiteFromSupabase,
+  saveVisitToSupabase,
+  upsertTechnicianToSupabase,
+  deleteTechnicianFromSupabase,
+} from './services/supabaseService';
 
-const STORAGE_KEY = 'elevatorops_sites_data_v1';
+const STORAGE_SITES_KEY = 'elevatorops_sites_v4_clean';
+const STORAGE_TECHS_KEY = 'elevatorops_technicians_v4';
+const STORAGE_LANG_KEY = 'elevatorops_language';
 
 export default function App() {
-  // Load sites from local storage or fallback to initial seed
+  // 1. Language state (defaults to English 'en')
+  const [language, setLanguage] = useState<Language>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_LANG_KEY);
+      if (saved === 'en' || saved === 'tr') return saved;
+    } catch (e) {}
+    return 'en';
+  });
+
+  const toggleLanguage = () => {
+    setLanguage((prev) => {
+      const next: Language = prev === 'en' ? 'tr' : 'en';
+      try {
+        localStorage.setItem(STORAGE_LANG_KEY, next);
+      } catch (e) {}
+      return next;
+    });
+  };
+
+  const t = translations[language];
+
+  // 2. Technicians / Team state
+  const [technicians, setTechnicians] = useState<Technician[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_TECHS_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error loading stored technicians:', e);
+    }
+    return INITIAL_TECHNICIANS;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_TECHS_KEY, JSON.stringify(technicians));
+    } catch (e) {
+      console.error('Error persisting technicians:', e);
+    }
+  }, [technicians]);
+
+  // Current active user (defaults to Adam)
+  const [currentTechnician, setCurrentTechnician] = useState<Technician>(
+    technicians[0] || INITIAL_TECHNICIANS[0]
+  );
+
+  useEffect(() => {
+    // If current technician was removed or changed, keep it synced
+    const found = technicians.find((tech) => tech.id === currentTechnician.id);
+    if (!found && technicians.length > 0) {
+      setCurrentTechnician(technicians[0]);
+    }
+  }, [technicians, currentTechnician]);
+
+  // 3. Sites state
   const [sites, setSites] = useState<BuildingSite[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(STORAGE_SITES_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -33,7 +104,7 @@ export default function App() {
                   status: s.lastVisit.status || 'passed',
                   attendingTechnicians: Array.isArray(s.lastVisit.attendingTechnicians) && s.lastVisit.attendingTechnicians.length > 0
                     ? s.lastVisit.attendingTechnicians
-                    : [s.lastVisit.technicianName || 'Adam Osama'],
+                    : [s.lastVisit.technicianName || 'Adam'],
                   checklist: s.lastVisit.checklist || {
                     doorSensors: true,
                     carLeveling: true,
@@ -75,27 +146,48 @@ export default function App() {
     return INITIAL_SITES;
   });
 
-  // Current logged in technician (defaults to Adam Osama)
-  const [currentTechnician, setCurrentTechnician] = useState<Technician>(TECHNICIANS[0]);
-  const [activeTab, setActiveTab] = useState<'routes' | 'directory' | 'reports'>('routes');
-
-  // Modal states
-  const [inspectingSite, setInspectingSite] = useState<BuildingSite | null>(null);
-  const [isSiteModalOpen, setIsSiteModalOpen] = useState<boolean>(false);
-  const [isEmergencyFaultModalOpen, setIsEmergencyFaultModalOpen] = useState<boolean>(false);
-  const [editingSite, setEditingSite] = useState<BuildingSite | null>(null);
-
-  // Toast feedback
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Sync to local storage
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sites));
+      localStorage.setItem(STORAGE_SITES_KEY, JSON.stringify(sites));
     } catch (e) {
       console.error('Error persisting sites data:', e);
     }
   }, [sites]);
+
+  // Tab & modal states
+  const [activeTab, setActiveTab] = useState<'routes' | 'directory' | 'reports' | 'admin'>('routes');
+  const [inspectingSite, setInspectingSite] = useState<BuildingSite | null>(null);
+  const [isSiteModalOpen, setIsSiteModalOpen] = useState<boolean>(false);
+  const [isEmergencyFaultModalOpen, setIsEmergencyFaultModalOpen] = useState<boolean>(false);
+  const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState<boolean>(false);
+  const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean>(false);
+  const [editingSite, setEditingSite] = useState<BuildingSite | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Auto-connect to Supabase cloud if configured
+  useEffect(() => {
+    let isMounted = true;
+    async function initSupabase() {
+      if (isSupabaseConfigured()) {
+        const ping = await testSupabaseConnection();
+        if (ping.success && isMounted) {
+          setIsSupabaseConnected(true);
+          const remoteSites = await fetchSitesFromSupabase();
+          if (remoteSites && remoteSites.length > 0 && isMounted) {
+            setSites(remoteSites);
+          }
+          const remoteTechs = await fetchTechniciansFromSupabase();
+          if (remoteTechs && remoteTechs.length > 0 && isMounted) {
+            setTechnicians(remoteTechs);
+          }
+        }
+      }
+    }
+    initSupabase();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -104,7 +196,83 @@ export default function App() {
     }, 4000);
   };
 
-  // Handle visit completion (appends to visit history so buildings can be visited multiple times)
+  // Add Member
+  const handleAddTechnician = (newTech: Technician) => {
+    setTechnicians((prev) => [...prev, newTech]);
+    if (isSupabaseConnected) {
+      upsertTechnicianToSupabase(newTech);
+    }
+  };
+
+  // Delete Member & safely reassign their sites to Adam
+  const handleDeleteTechnician = (techId: string) => {
+    const targetTech = technicians.find((t) => t.id === techId);
+    setTechnicians((prev) => prev.filter((t) => t.id !== techId));
+    if (isSupabaseConnected) {
+      deleteTechnicianFromSupabase(techId);
+    }
+
+    if (targetTech) {
+      setSites((prev) =>
+        prev.map((s) => {
+          if (s.assignedTechnicianEmail === targetTech.email) {
+            const reallocated = { ...s, assignedTechnicianEmail: 'adam.osama60@gmail.com' };
+            if (isSupabaseConnected) {
+              upsertSiteToSupabase(reallocated);
+            }
+            return reallocated;
+          }
+          return s;
+        })
+      );
+    }
+  };
+
+  // Update site GPS location from map drag-and-drop
+  const handleUpdateSiteLocation = (siteId: string, lat: number, lng: number) => {
+    let updatedSite: BuildingSite | null = null;
+    setSites((prev) =>
+      prev.map((s) => {
+        if (s.id === siteId) {
+          updatedSite = {
+            ...s,
+            latitude: lat,
+            longitude: lng,
+            googleMapsUrl: `https://www.google.com/maps?q=${lat},${lng}&z=17&hl=en`,
+          };
+          return updatedSite;
+        }
+        return s;
+      })
+    );
+    if (isSupabaseConnected && updatedSite) {
+      upsertSiteToSupabase(updatedSite);
+    }
+    const targetSite = sites.find((s) => s.id === siteId);
+    showToast(
+      language === 'en'
+        ? `${targetSite?.name || 'Building'} GPS location updated!`
+        : `${targetSite?.name || 'Bina'} konumu başarıyla güncellendi!`
+    );
+  };
+
+  // Batch reassign sites to a specific technician
+  const handleBatchReassign = (targetEmail: string, siteIds: string[]) => {
+    setSites((prev) =>
+      prev.map((s) => {
+        if (siteIds.includes(s.id)) {
+          const updated = { ...s, assignedTechnicianEmail: targetEmail };
+          if (isSupabaseConnected) {
+            upsertSiteToSupabase(updated);
+          }
+          return updated;
+        }
+        return s;
+      })
+    );
+  };
+
+  // Save visit inspection
   const handleSaveVisit = (siteId: string, visitRecord: VisitRecord) => {
     setSites((prev) =>
       prev.map((s) => {
@@ -121,10 +289,17 @@ export default function App() {
         return s;
       })
     );
-    showToast(`Visit log #${(sites.find((s) => s.id === siteId)?.visitHistory?.length || 0) + 1} recorded for ${visitRecord.siteName}!`);
+    if (isSupabaseConnected) {
+      saveVisitToSupabase(siteId, visitRecord);
+    }
+    showToast(
+      language === 'en'
+        ? `Inspection log saved for ${visitRecord.siteName}!`
+        : `${visitRecord.siteName} için bakım kaydı kaydedildi!`
+    );
   };
 
-  // Handle Emergency Fault Shortcut (marks site as Attention Required & appends log)
+  // Handle Emergency Fault Shortcut
   const handleSaveEmergencyFault = (siteId: string, visitRecord: VisitRecord) => {
     setSites((prev) =>
       prev.map((s) => {
@@ -141,10 +316,17 @@ export default function App() {
         return s;
       })
     );
-    showToast(`EMERGENCY REPORTED: ${visitRecord.siteName} updated to Attention Required!`);
+    if (isSupabaseConnected) {
+      saveVisitToSupabase(siteId, visitRecord);
+    }
+    showToast(
+      language === 'en'
+        ? `EMERGENCY ALERT: ${visitRecord.siteName} flagged for immediate service!`
+        : `ACİL ARIZA BİLDİRİMİ: ${visitRecord.siteName} acil müdahale havuzuna alındı!`
+    );
   };
 
-  // Handle add / edit site
+  // Save / Add site
   const handleSaveSite = (savedSite: BuildingSite) => {
     setSites((prev) => {
       const exists = prev.some((s) => s.id === savedSite.id);
@@ -153,19 +335,33 @@ export default function App() {
       }
       return [savedSite, ...prev];
     });
-    showToast(`Building ${savedSite.name} successfully updated.`);
+    if (isSupabaseConnected) {
+      upsertSiteToSupabase(savedSite);
+    }
+    showToast(
+      language === 'en'
+        ? `Building ${savedSite.name} successfully updated.`
+        : `${savedSite.name} binası başarıyla güncellendi.`
+    );
   };
 
-  // Handle site deletion
+  // Site deletion
   const handleDeleteSite = (siteId: string) => {
     const target = sites.find((s) => s.id === siteId);
     setSites((prev) => prev.filter((s) => s.id !== siteId));
-    showToast(`Site ${target?.name || siteId} removed from contracts.`);
+    if (isSupabaseConnected) {
+      deleteSiteFromSupabase(siteId);
+    }
+    showToast(
+      language === 'en'
+        ? `Site ${target?.name || siteId} removed from contracts.`
+        : `${target?.name || siteId} sözleşmelerden kaldırıldı.`
+    );
   };
 
-  // Handle reassigning site
+  // Reassign single site
   const handleReassignSite = (siteId: string, newEmail: string) => {
-    const tech = TECHNICIANS.find((t) => t.email === newEmail);
+    const targetTech = technicians.find((t) => t.email === newEmail);
     setSites((prev) =>
       prev.map((s) => {
         if (s.id === siteId) {
@@ -174,10 +370,14 @@ export default function App() {
         return s;
       })
     );
-    showToast(`Reassigned site to ${tech?.name || newEmail}.`);
+    showToast(
+      language === 'en'
+        ? `Reassigned site to ${targetTech?.name || newEmail}.`
+        : `Bina ${targetTech?.name || newEmail} teknisyenine devredildi.`
+    );
   };
 
-  // Handle mass-batch import of building sites from Excel, CSV, or WhatsApp
+  // Batch import
   const handleBatchImport = (importedSites: BuildingSite[], updateExisting: boolean) => {
     setSites((prev) => {
       const existingIdMap = new Map(prev.map((s) => [s.id, s]));
@@ -209,7 +409,11 @@ export default function App() {
         }
       });
 
-      showToast(`Batch import complete: ${addedCount} new sites added, ${updatedCount} existing updated.`);
+      showToast(
+        language === 'en'
+          ? `Import complete: ${addedCount} new sites added, ${updatedCount} updated.`
+          : `İçe aktarma tamamlandı: ${addedCount} yeni bina eklendi, ${updatedCount} güncellendi.`
+      );
       return result;
     });
   };
@@ -217,20 +421,29 @@ export default function App() {
   // Reset to initial demo data
   const handleResetData = () => {
     setSites(INITIAL_SITES);
-    localStorage.removeItem(STORAGE_KEY);
-    showToast('Database reset to initial 160 contracted sites.');
+    setTechnicians(INITIAL_TECHNICIANS);
+    localStorage.removeItem(STORAGE_SITES_KEY);
+    localStorage.removeItem(STORAGE_TECHS_KEY);
+    showToast(
+      language === 'en'
+        ? 'Database reset to clean real Istanbul sites and Adam operations director.'
+        : 'Veritabanı gerçek İstanbul binalarına ve Adam yönetici profiline sıfırlandı.'
+    );
   };
 
   const visitedCount = sites.filter((s) => s.lastVisit).length;
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col text-slate-900">
-      {/* Top Bar with Emergency Fault Shortcut */}
+      {/* Top Bar with Language Switcher & Profile */}
       <TopNav
         activeTab={activeTab}
         onSelectTab={setActiveTab}
+        technicians={technicians}
         currentTechnician={currentTechnician}
         onSelectTechnician={setCurrentTechnician}
+        language={language}
+        onToggleLanguage={toggleLanguage}
         onOpenAddSite={() => {
           setEditingSite(null);
           setIsSiteModalOpen(true);
@@ -238,6 +451,8 @@ export default function App() {
         onOpenEmergencyFault={() => setIsEmergencyFaultModalOpen(true)}
         totalSitesCount={sites.length}
         visitedSitesCount={visitedCount}
+        isSupabaseConnected={isSupabaseConnected}
+        onOpenSupabaseConnect={() => setIsSupabaseModalOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -245,7 +460,11 @@ export default function App() {
         {activeTab === 'routes' && (
           <RoutePlannerView
             sites={sites}
+            technicians={technicians}
             currentTechnician={currentTechnician}
+            language={language}
+            onUpdateSiteLocation={handleUpdateSiteLocation}
+            isAdmin={true}
             onOpenInspect={(site) => setInspectingSite(site)}
             onOpenAddSite={() => {
               setEditingSite(null);
@@ -257,7 +476,9 @@ export default function App() {
         {activeTab === 'directory' && (
           <SitesDirectoryView
             sites={sites}
+            technicians={technicians}
             currentTechnician={currentTechnician}
+            language={language}
             onOpenInspect={(site) => setInspectingSite(site)}
             onOpenEditSite={(site) => {
               setEditingSite(site);
@@ -273,8 +494,29 @@ export default function App() {
           />
         )}
 
+        {activeTab === 'admin' && (
+          <AdminPortal
+            sites={sites}
+            technicians={technicians}
+            currentTechnician={currentTechnician}
+            language={language}
+            onUpdateSite={handleSaveSite}
+            onDeleteSite={handleDeleteSite}
+            onBatchReassign={handleBatchReassign}
+            onAddTechnician={handleAddTechnician}
+            onDeleteTechnician={handleDeleteTechnician}
+            onResetData={handleResetData}
+            onOpenSupabaseConnect={() => setIsSupabaseModalOpen(true)}
+          />
+        )}
+
         {activeTab === 'reports' && (
-          <ReportsView sites={sites} currentTechnician={currentTechnician} />
+          <ReportsView
+            sites={sites}
+            technicians={technicians}
+            currentTechnician={currentTechnician}
+            language={language}
+          />
         )}
       </main>
 
@@ -283,21 +525,21 @@ export default function App() {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-slate-700">ElevatorOps</span>
-            <span aria-hidden="true">·</span>
-            <span>Intelligent Maintenance Dispatch & Route Optimization</span>
+            <span aria-hidden="true">•</span>
+            <span>One Tech Asansör - Operations & Route Management</span>
           </div>
 
           <div className="flex items-center gap-4">
             <button
               onClick={handleResetData}
               className="text-slate-400 hover:text-slate-700 flex items-center gap-1 transition-colors"
-              title="Reset initial 160 elevator sites data"
+              title="Reset data"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Reset Demo Seed Data</span>
+              <span>{t.resetData}</span>
             </button>
             <span aria-hidden="true" className="text-slate-300">|</span>
-            <span className="font-mono tabular-nums">Logged in as {currentTechnician.email}</span>
+            <span className="font-mono tabular-nums">{t.activeTechnician}: {currentTechnician.name}</span>
           </div>
         </div>
       </footer>
@@ -305,8 +547,10 @@ export default function App() {
       {/* On-Site Inspection & Visit Modal */}
       <VisitInspectionModal
         site={inspectingSite}
+        technicians={technicians}
         technicianEmail={currentTechnician.email}
         technicianName={currentTechnician.name}
+        language={language}
         isOpen={Boolean(inspectingSite)}
         onClose={() => setInspectingSite(null)}
         onSaveVisit={handleSaveVisit}
@@ -322,6 +566,8 @@ export default function App() {
         siteToEdit={editingSite}
         onSaveSite={handleSaveSite}
         currentTechnicianEmail={currentTechnician.email}
+        technicians={technicians}
+        language={language}
       />
 
       {/* Emergency Fault Rapid Dispatch Modal */}
@@ -329,14 +575,32 @@ export default function App() {
         isOpen={isEmergencyFaultModalOpen}
         onClose={() => setIsEmergencyFaultModalOpen(false)}
         sites={sites}
+        technicians={technicians}
         technicianEmail={currentTechnician.email}
         technicianName={currentTechnician.name}
+        language={language}
         onSaveFault={handleSaveEmergencyFault}
       />
 
-      {/* Floating Success Notification Toast */}
+      {/* Supabase Cloud Database Connection & Sync Modal */}
+      <SupabaseConnectModal
+        isOpen={isSupabaseModalOpen}
+        onClose={() => setIsSupabaseModalOpen(false)}
+        sites={sites}
+        technicians={technicians}
+        onSyncComplete={() => {
+          setIsSupabaseConnected(true);
+          showToast(
+            language === 'en'
+              ? 'Supabase cloud synchronization active!'
+              : 'Supabase bulut senkronizasyonu devrede!'
+          );
+        }}
+      />
+
+      {/* Floating Toast */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-2.5 animate-in fade-in slide-in-from-bottom-2">
+        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-2.5 animate-fadeIn">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{toastMessage}</span>
         </div>

@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { BuildingSite, RouteStop, Technician } from '../types';
+import { Language, translations } from '../utils/translations';
 import {
   optimizeRouteSequence,
   evaluateRouteOptimizationMetrics,
   buildGoogleMapsRouteUrl,
   buildSingleSiteMapUrl,
 } from '../utils/geo';
-import { RouteMapCanvas } from './RouteMapCanvas';
+import { InteractiveRealMap } from './InteractiveRealMap';
 import {
   Sparkles,
   MapPin,
@@ -33,7 +34,11 @@ import { SiteMapIcon } from './SiteMapIcon';
 import { LocationPreviewModal } from './LocationPreviewModal';
 
 interface RoutePlannerViewProps {
+  language?: Language;
+  technicians?: Technician[];
   sites: BuildingSite[];
+  onUpdateSiteLocation?: (siteId: string, lat: number, lng: number) => void;
+  isAdmin?: boolean;
   currentTechnician: Technician;
   onOpenInspect: (site: BuildingSite) => void;
   onOpenAddSite: () => void;
@@ -44,7 +49,12 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
   currentTechnician,
   onOpenInspect,
   onOpenAddSite,
+  onUpdateSiteLocation,
+  isAdmin = false,
+  language = 'en',
+  technicians = [],
 }) => {
+  const t = translations[language];
   // Filter settings
   const [selectedNeighborhood, setSelectedNeighborhood] = useState<string>('All');
   const [onlyMySites, setOnlyMySites] = useState<boolean>(true);
@@ -370,7 +380,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
       </div>
 
       {/* 3. D3 Geo Projection Map Canvas */}
-      <RouteMapCanvas
+      <InteractiveRealMap
         stops={currentStops}
         activeStopIndex={activeStopIndex}
         onSelectStopIndex={(idx) => setActiveStopIndex(idx)}
@@ -378,6 +388,8 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
         allSitesInCluster={candidateSites}
         technicianName={currentTechnician.name}
         onAddSiteToRoute={handleAddSiteToRoute}
+        onUpdateSiteLocation={onUpdateSiteLocation}
+        isAdmin={isAdmin}
       />
 
       {/* 4. Shift Completion Progress Bar */}
@@ -535,15 +547,27 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
                           <span aria-hidden="true">·</span>
                           <span>{stop.site.floors} Floors</span>
                           <span aria-hidden="true">·</span>
-                          <span className="flex items-center gap-1 font-mono text-slate-700 font-semibold bg-slate-100 px-1.5 py-0.5 rounded">
-                            <KeyRound className="w-3 h-3 text-amber-600" />
-                            {stop.site.accessCode}
-                          </span>
-                          <span aria-hidden="true">·</span>
-                          <span className="flex items-center gap-1 text-slate-600">
-                            <Phone className="w-3 h-3 text-slate-400" />
-                            {stop.site.managerName} ({stop.site.managerPhone})
-                          </span>
+                          {stop.site.accessCode ? (
+                            <span className="flex items-center gap-1 font-mono text-amber-900 font-bold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                              <KeyRound className="w-3 h-3 text-amber-600" />
+                              {stop.site.accessCode}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 font-mono text-[11px]">
+                              {t.noDoorCode}
+                            </span>
+                          )}
+                          <span aria-hidden="true">•</span>
+                          {(stop.site.managerName || stop.site.managerPhone) ? (
+                            <span className="flex items-center gap-1 text-slate-600">
+                              <Phone className="w-3 h-3 text-slate-400" />
+                              {stop.site.managerName} {stop.site.managerPhone ? `(${stop.site.managerPhone})` : ''}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 text-[11px]">
+                              {t.managerContact}: {t.notSpecified}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

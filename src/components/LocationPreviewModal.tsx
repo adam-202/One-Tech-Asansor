@@ -533,33 +533,41 @@ Google Maps: ${googleMapsUrl}`;
                 </div>
                 <div className="flex justify-between items-center py-1 border-b border-slate-200">
                   <span className="text-slate-500">Security Key Code:</span>
-                  <div className="flex items-center gap-1.5 font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                    <KeyRound className="w-3.5 h-3.5 text-amber-600" />
-                    <span>{site.accessCode}</span>
-                    <button
-                      onClick={handleCopyCode}
-                      className="ml-1 text-slate-400 hover:text-slate-700"
-                      title="Copy access code"
-                    >
-                      {copiedCode ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5" />
-                      )}
-                    </button>
-                  </div>
+                  {site.accessCode ? (
+                    <div className="flex items-center gap-1.5 font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                      <KeyRound className="w-3.5 h-3.5 text-amber-600" />
+                      <span>{site.accessCode}</span>
+                      <button
+                        onClick={handleCopyCode}
+                        className="ml-1 text-slate-400 hover:text-slate-700"
+                        title="Copy access code"
+                      >
+                        {copiedCode ? (
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-slate-400 text-xs font-mono">No code required</span>
+                  )}
                 </div>
                 <div className="flex justify-between items-center py-1">
                   <span className="text-slate-500">Building Manager:</span>
-                  <a
-                    href={`tel:${site.managerPhone}`}
-                    className="font-medium text-blue-600 hover:underline flex items-center gap-1"
-                  >
-                    <Phone className="w-3 h-3" />
-                    <span>
-                      {site.managerName} ({site.managerPhone})
-                    </span>
-                  </a>
+                  {(site.managerName || site.managerPhone) ? (
+                    <a
+                      href={site.managerPhone ? `tel:${site.managerPhone}` : '#'}
+                      className="font-medium text-blue-600 hover:underline flex items-center gap-1"
+                    >
+                      <Phone className="w-3 h-3" />
+                      <span>
+                        {site.managerName} {site.managerPhone ? `(${site.managerPhone})` : ''}
+                      </span>
+                    </a>
+                  ) : (
+                    <span className="text-slate-400 text-xs font-medium">Not specified</span>
+                  )}
                 </div>
               </div>
             </div>

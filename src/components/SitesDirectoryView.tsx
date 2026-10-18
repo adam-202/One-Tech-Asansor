@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { BuildingSite, Technician } from '../types';
+import { Language, translations } from '../utils/translations';
 import { TECHNICIANS } from '../data/seedSites';
 import {
   Search,
@@ -35,6 +36,8 @@ import { LocationPreviewModal } from './LocationPreviewModal';
 import { BatchImportModal } from './BatchImportModal';
 
 interface SitesDirectoryViewProps {
+  technicians?: Technician[];
+  language?: Language;
   sites: BuildingSite[];
   currentTechnician: Technician;
   onOpenInspect: (site: BuildingSite) => void;
@@ -48,6 +51,8 @@ interface SitesDirectoryViewProps {
 export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
   sites,
   currentTechnician,
+  technicians: passedTechnicians,
+  language = 'en',
   onOpenInspect,
   onOpenEditSite,
   onOpenAddSite,
@@ -55,6 +60,8 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
   onReassignSite,
   onBatchImport,
 }) => {
+  const t = translations[language];
+  const activeTechnicians = passedTechnicians && passedTechnicians.length > 0 ? passedTechnicians : TECHNICIANS;
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'visited' | 'pending' | 'issues'>('all');
   const [selectedNeighborhood, setSelectedNeighborhood] = useState('All');
@@ -358,9 +365,9 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
                 onChange={(e) => setTechFilter(e.target.value)}
                 className="w-full text-xs py-2 px-3 rounded-lg border border-slate-300 bg-white text-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden font-medium shadow-2xs"
               >
-                <option value="all">All Technicians ({TECHNICIANS.length})</option>
+                <option value="all">All Technicians ({activeTechnicians.length})</option>
                 <option value="mine">Assigned to Me ({currentTechnician.name})</option>
-                {TECHNICIANS.map((t) => {
+                {activeTechnicians.map((t) => {
                   const count = sites.filter((s) => s.assignedTechnicianEmail === t.email).length;
                   return (
                     <option key={t.id} value={t.email}>
@@ -530,7 +537,7 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
           {filteredSites.map((site) => {
             const isVisited = Boolean(site.lastVisit);
             const visit = site.lastVisit;
-            const assignedTech = TECHNICIANS.find((t) => t.email === site.assignedTechnicianEmail);
+            const assignedTech = activeTechnicians.find((t) => t.email === site.assignedTechnicianEmail);
 
             return (
               <div
@@ -604,15 +611,27 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
                       <span aria-hidden="true">·</span>
                       <span className="text-slate-600">{site.elevatorBrand}</span>
                       <span aria-hidden="true">·</span>
-                      <span className="flex items-center gap-1 font-mono text-slate-800 font-semibold bg-slate-100 px-1.5 py-0.5 rounded">
-                        <KeyRound className="w-3 h-3 text-amber-600" />
-                        {site.accessCode}
-                      </span>
-                      <span aria-hidden="true">·</span>
-                      <span className="flex items-center gap-1 text-slate-600">
-                        <Phone className="w-3 h-3 text-slate-400" />
-                        {site.managerName} ({site.managerPhone})
-                      </span>
+                      {site.accessCode ? (
+                        <span className="flex items-center gap-1 font-mono text-amber-900 font-bold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                          <KeyRound className="w-3 h-3 text-amber-600" />
+                          {site.accessCode}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 font-mono text-[11px]">
+                          {t.noDoorCode}
+                        </span>
+                      )}
+                      <span aria-hidden="true">•</span>
+                      {(site.managerName || site.managerPhone) ? (
+                        <span className="flex items-center gap-1 text-slate-600">
+                          <Phone className="w-3 h-3 text-slate-400" />
+                          {site.managerName} {site.managerPhone ? `(${site.managerPhone})` : ''}
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 text-[11px]">
+                          {t.managerContact}: {t.notSpecified}
+                        </span>
+                      )}
                     </div>
 
                     {/* Visit Log Record if Completed */}
@@ -646,7 +665,7 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
                       className="text-xs py-1.5 pl-2 pr-6 rounded-lg border border-slate-300 bg-white text-slate-700 outline-hidden font-medium"
                       title="Reassign to another technician"
                     >
-                      {TECHNICIANS.map((tech) => (
+                      {activeTechnicians.map((tech) => (
                         <option key={tech.id} value={tech.email}>
                           Assign: {tech.name}
                         </option>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BuildingSite, VisitRecord, InspectionStatus } from '../types';
+import { BuildingSite, VisitRecord, InspectionStatus, Technician } from '../types';
 import { TECHNICIANS } from '../data/seedSites';
+import { Language, translations } from '../utils/translations';
 import {
   AlertTriangle,
   AlertOctagon,
@@ -17,6 +18,8 @@ import {
 } from 'lucide-react';
 
 interface EmergencyFaultModalProps {
+  technicians?: Technician[];
+  language?: Language;
   isOpen: boolean;
   onClose: () => void;
   sites: BuildingSite[];
@@ -32,7 +35,11 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
   technicianEmail,
   technicianName,
   onSaveFault,
+  technicians: passedTechnicians,
+  language = 'en',
 }) => {
+  const t = translations[language];
+  const activeTechnicians = passedTechnicians && passedTechnicians.length > 0 ? passedTechnicians : TECHNICIANS;
   if (!isOpen) return null;
 
   const [selectedSiteId, setSelectedSiteId] = useState<string>(sites[0]?.id || '');
@@ -314,7 +321,7 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
               </div>
 
               <div className="flex flex-wrap gap-1.5 p-2.5 bg-slate-50 rounded-xl border border-slate-200">
-                {TECHNICIANS.slice(0, 10).map((tech) => {
+                {activeTechnicians.map((tech) => {
                   const isSelected = attendingTechs.includes(tech.name);
                   return (
                     <button

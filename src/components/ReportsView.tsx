@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { BuildingSite, Technician, VisitRecord } from '../types';
+import { Language, translations } from '../utils/translations';
 import { TECHNICIANS } from '../data/seedSites';
 import {
   FileSpreadsheet,
@@ -29,9 +30,17 @@ import {
 interface ReportsViewProps {
   sites: BuildingSite[];
   currentTechnician: Technician;
+  technicians?: Technician[];
+  language?: Language;
 }
 
-export const ReportsView: React.FC<ReportsViewProps> = ({ sites, currentTechnician }) => {
+export const ReportsView: React.FC<ReportsViewProps> = ({
+  sites,
+  currentTechnician,
+  technicians = TECHNICIANS,
+  language = 'en',
+}) => {
+  const activeTechnicians: Technician[] = technicians && technicians.length > 0 ? technicians : TECHNICIANS;
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>('daily');
   const [selectedTechEmail, setSelectedTechEmail] = useState<string>(currentTechnician.email);
   const [recipientEmail, setRecipientEmail] = useState<string>('supervisor@elevatormaintenance.com');
@@ -67,7 +76,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ sites, currentTechnici
     );
   }, [targetSites, todayStr]);
 
-  const selectedTech = TECHNICIANS.find((t) => t.email === selectedTechEmail) || {
+  const selectedTech = activeTechnicians.find((t) => t.email === selectedTechEmail) || {
     name: 'All Field Specialists',
     email: 'team@elevatormaintenance.com',
   };
@@ -215,7 +224,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ sites, currentTechnici
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-          {TECHNICIANS.map((tech) => {
+          {activeTechnicians.map((tech) => {
             const techSites = sites.filter((s) => s.assignedTechnicianEmail === tech.email);
             const techVisited = techSites.filter((s) => s.lastVisit).length;
             const techRate = techSites.length > 0 ? (techVisited / techSites.length) * 100 : 0;
@@ -232,7 +241,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ sites, currentTechnici
               >
                 <div className="flex items-center gap-2.5 mb-2">
                   <div className={`w-7 h-7 rounded-full ${tech.avatarColor} text-white font-bold text-xs flex items-center justify-center shrink-0`}>
-                    {tech.name.split(' ').map((n) => n[0]).join('')}
+                    {tech.name.split(' ').map((n: string) => n[0]).join('')}
                   </div>
                   <div className="truncate">
                     <p className="text-xs font-bold text-slate-900 truncate">{tech.name}</p>
@@ -305,7 +314,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ sites, currentTechnici
                 className="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white text-slate-900 outline-hidden font-medium"
               >
                 <option value="all">Entire Maintenance Team ({sites.length} sites)</option>
-                {TECHNICIANS.map((t) => (
+                {activeTechnicians.map((t) => (
                   <option key={t.id} value={t.email}>
                     {t.name} ({t.assignedCount} sites)
                   </option>

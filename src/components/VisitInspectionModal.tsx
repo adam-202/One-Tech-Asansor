@@ -5,8 +5,10 @@ import {
   InspectionStatus,
   VisitRecord,
   VisitType,
+  Technician,
 } from '../types';
 import { TECHNICIANS } from '../data/seedSites';
+import { Language, translations } from '../utils/translations';
 import {
   X,
   CheckCircle2,
@@ -33,6 +35,8 @@ import {
 import { buildSingleSiteMapUrl } from '../utils/geo';
 
 interface VisitInspectionModalProps {
+  technicians?: Technician[];
+  language?: Language;
   site: BuildingSite | null;
   technicianEmail: string;
   technicianName: string;
@@ -48,7 +52,11 @@ export const VisitInspectionModal: React.FC<VisitInspectionModalProps> = ({
   isOpen,
   onClose,
   onSaveVisit,
+  technicians: passedTechnicians,
+  language = 'en',
 }) => {
+  const t = translations[language];
+  const activeTechnicians = passedTechnicians && passedTechnicians.length > 0 ? passedTechnicians : TECHNICIANS;
   // Tab switch between logging a new visit and viewing history
   const [activeModalTab, setActiveModalTab] = useState<'new_log' | 'history'>('new_log');
 
@@ -357,7 +365,7 @@ export const VisitInspectionModal: React.FC<VisitInspectionModalProps> = ({
 
               <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
                 <div className="flex flex-wrap gap-1.5">
-                  {TECHNICIANS.slice(0, 10).map((tech) => {
+                  {activeTechnicians.map((tech) => {
                     const isSelected = attendingTechs.includes(tech.name);
                     return (
                       <button
