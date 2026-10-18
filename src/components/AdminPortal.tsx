@@ -25,6 +25,10 @@ import {
   EyeOff,
   Sparkles,
   Lock,
+  Pencil,
+  MapPin,
+  CheckSquare,
+  Square,
 } from 'lucide-react';
 import { exportSitesToCsv } from '../utils/exportReport';
 import { Language, translations } from '../utils/translations';
@@ -81,6 +85,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [resetPasswordInput, setResetPasswordInput] = useState('');
   const [revealedPasswords, setRevealedPasswords] = useState<Record<string, boolean>>({});
 
+  // Edit Member Modal State
+  const [editingTech, setEditingTech] = useState<Technician | null>(null);
+  const [editMemberName, setEditMemberName] = useState('');
+  const [editMemberEmail, setEditMemberEmail] = useState('');
+  const [editMemberPhone, setEditMemberPhone] = useState('');
+  const [editMemberRole, setEditMemberRole] = useState('');
+  const [editMemberColor, setEditMemberColor] = useState('bg-blue-600');
+  const [editMemberIsAdmin, setEditMemberIsAdmin] = useState(false);
+
+  // Assign Sites to Member Modal State
+  const [assigningTech, setAssigningTech] = useState<Technician | null>(null);
+  const [assignedSiteIdsForModal, setAssignedSiteIdsForModal] = useState<string[]>([]);
+  const [assignModalSearch, setAssignModalSearch] = useState('');
+  const [assignModalNeighborhood, setAssignModalNeighborhood] = useState('all');
+  const [assignModalFilterMode, setAssignModalFilterMode] = useState<'all' | 'assigned' | 'other'>('all');
 
   const filteredSites = sites.filter((s) => {
     if (selectedTechFilter !== 'all' && s.assignedTechnicianEmail !== selectedTechFilter) return false;
@@ -159,6 +178,130 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setTimeout(() => setSuccessToast(null), 3500);
   };
 
+  // Open Edit Member Modal
+  const handleOpenEditMember = (tech: Technician) => {
+    setEditingTech(tech);
+    setEditMemberName(tech.name);
+    setEditMemberEmail(tech.email);
+    setEditMemberPhone(tech.phone || '');
+    setEditMemberRole(tech.role || '');
+    setEditMemberColor(tech.avatarColor || 'bg-blue-600');
+    setEditMemberIsAdmin(Boolean(tech.isAdmin || tech.email === 'adam.osama60@gmail.com'));
+  };
+
+  // Save Edit Member
+  const handleSaveEditMember = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTech || !editMemberName.trim() || !editMemberEmail.trim()) return;
+
+    const oldEmail = editingTech.email;
+    const newEmail = editMemberEmail.trim();
+
+    const updatedTech: Technician = {
+      ...editingTech,
+      name: editMemberName.trim(),
+      email: newEmail,
+      phone: editMemberPhone.trim(),
+      role: editMemberRole.trim() || editingTech.role,
+      avatarColor: editMemberColor,
+      isAdmin: editMemberIsAdmin,
+    };
+
+    if (onUpdateTechnician) {
+      onUpdateTechnician(updatedTech);
+    }
+
+    // If email changed, reassign their existing sites to new email
+    if (oldEmail !== newEmail) {
+      const techSiteIds = sites
+        .filter((s) => s.assignedTechnicianEmail === oldEmail)
+        .map((s) => s.id);
+      if (techSiteIds.length > 0) {
+        onBatchReassign(newEmail, techSiteIds);
+      }
+    }
+
+    setEditingTech(null);
+    setSuccessToast(
+      language === 'en'
+        ? `Updated profile for ${updatedTech.name}!`
+        : `${updatedTech.name} profili başarıyla güncellendi!`
+    );
+    setTimeout(() => setSuccessToast(null), 3500);
+  };
+
+  // Open Assign Sites Modal
+  const handleOpenAssignSites = (tech: Technician) => {
+    setAssigningTech(tech);
+    const currentIds = sites
+      .filter((s) => s.assignedTechnicianEmail === tech.email)
+      .map((s) => s.id);
+    setAssignedSiteIdsForModal(currentIds);
+    setAssignModalSearch('');
+    setAssignModalNeighborhood('all');
+    setAssignModalFilterMode('all');
+  };
+
+  // Toggle single site assignment in modal
+  const handleToggleSiteInAssignModal = (siteId: string) => {
+    setAssignedSiteIdsForModal((prev) =>
+      prev.includes(siteId) ? prev.filter((id) => id !== siteId) : [...prev, siteId]
+    );
+  };
+
+  // Select all visible sites in modal
+  const handleSelectAllVisibleSites = (visibleSiteIds: string[]) => {
+    setAssignedSiteIdsForModal((prev) => {
+      const set = new Set([...prev, ...visibleSiteIds]);
+      return Array.from(set);
+    });
+  };
+
+  // Deselect all visible sites in modal
+  const handleDeselectAllVisibleSites = (visibleSiteIds: string[]) => {
+    setAssignedSiteIdsForModal((prev) =>
+      prev.filter((id) => !visibleSiteIds.includes(id))
+    );
+  };
+
+  // Save all site assignments from modal
+  const handleSaveAssignSites = () => {
+    if (!assigningTech) return;
+
+    // Sites currently assigned to this tech in the main state
+    const previouslyAssigned = sites
+      .filter((s) => s.assignedTechnicianEmail === assigningTech.email)
+      .map((s) => s.id);
+
+    // Newly added to this tech
+    const addedSiteIds = assignedSiteIdsForModal.filter((id) => !previouslyAssigned.includes(id));
+    // Removed from this tech
+    const removedSiteIds = previouslyAssigned.filter((id) => !assignedSiteIdsForModal.includes(id));
+
+    // Assign newly added to this tech
+    if (addedSiteIds.length > 0) {
+      onBatchReassign(assigningTech.email, addedSiteIds);
+    }
+
+    // Return removed sites to Adam (or shared)
+    if (removedSiteIds.length > 0) {
+      const fallbackEmail =
+        assigningTech.email === 'adam.osama60@gmail.com'
+          ? 'shared@elevatortech.io'
+          : 'adam.osama60@gmail.com';
+      onBatchReassign(fallbackEmail, removedSiteIds);
+    }
+
+    const count = assignedSiteIdsForModal.length;
+    setSuccessToast(
+      language === 'en'
+        ? `Updated building allocations for ${assigningTech.name} (${count} buildings assigned)!`
+        : `${assigningTech.name} için bina atamaları güncellendi (${count} bina atandı)!`
+    );
+    setAssigningTech(null);
+    setTimeout(() => setSuccessToast(null), 3500);
+  };
+
   const handleSaveNewMember = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMemberName.trim() || !newMemberEmail.trim()) return;
@@ -222,10 +365,28 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            {/* Quick Director Profile & Buildings Shortcuts */}
+            <button
+              onClick={() => handleOpenEditMember(currentTechnician)}
+              className="px-3.5 py-2 bg-blue-800/80 hover:bg-blue-700 text-white border border-blue-400/30 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm transition-all active:scale-95 cursor-pointer"
+              title={language === 'en' ? 'Edit Director Profile' : 'Direktör Profilini Düzenle'}
+            >
+              <Pencil className="w-4 h-4 text-blue-300" />
+              <span>{language === 'en' ? 'Edit Profile' : 'Profili Düzenle'}</span>
+            </button>
+            <button
+              onClick={() => handleOpenAssignSites(currentTechnician)}
+              className="px-3.5 py-2 bg-cyan-700/80 hover:bg-cyan-600 text-white border border-cyan-400/30 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm transition-all active:scale-95 cursor-pointer"
+              title={language === 'en' ? 'Manage My Buildings' : 'Bina Atamalarım'}
+            >
+              <MapPin className="w-4 h-4 text-cyan-200" />
+              <span>{language === 'en' ? 'My Buildings' : 'Bina Atamalarım'}</span>
+            </button>
+
             {onOpenSupabaseConnect && (
               <button
                 onClick={onOpenSupabaseConnect}
-                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-md transition-all active:scale-95"
+                className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer"
               >
                 <Database className="w-4 h-4 text-indigo-200" />
                 <span>Supabase Cloud DB</span>
@@ -233,21 +394,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             )}
             <button
               onClick={() => setIsAddMemberOpen(true)}
-              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-md transition-all active:scale-95"
+              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>{t.addMemberBtn}</span>
             </button>
             <button
               onClick={() => exportSitesToCsv(sites, 'onetech_master_database')}
-              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-md transition-all active:scale-95"
+              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer"
             >
               <Download className="w-4 h-4" />
               <span>{t.downloadDatabase}</span>
             </button>
             <button
               onClick={onResetData}
-              className="px-3.5 py-2 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all"
+              className="px-3.5 py-2 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer"
             >
               <RotateCcw className="w-4 h-4" />
               <span>{t.resetData}</span>
@@ -315,18 +476,29 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     </div>
                   </div>
 
-                  {/* Remove Member Button */}
-                  {!isDirector ? (
+                  {/* Actions in Header */}
+                  <div className="flex items-center gap-1">
                     <button
-                      onClick={() => handleDeleteMember(tech)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                      title={t.removeMemberBtn}
+                      onClick={() => handleOpenEditMember(tech)}
+                      className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                      title={language === 'en' ? 'Edit Member Profile' : 'Profili Düzenle'}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Pencil className="w-4 h-4" />
                     </button>
-                  ) : (
-                    <Shield className="w-4 h-4 text-blue-600 shrink-0" />
-                  )}
+                    {!isDirector ? (
+                      <button
+                        onClick={() => handleDeleteMember(tech)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        title={t.removeMemberBtn}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <div className="p-1.5 text-blue-600" title={language === 'en' ? 'Operations Director (Protected)' : 'Operasyon Direktörü'}>
+                        <Shield className="w-4 h-4" />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Account Password & Credentials Pill */}
@@ -378,6 +550,30 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       style={{ width: `${pct}%` }}
                     />
                   </div>
+                </div>
+
+                {/* Quick Action Bar: Assign Buildings & Edit Profile */}
+                <div className="pt-2 flex items-center gap-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenAssignSites(tech)}
+                    className="flex-1 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/80 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    <span>{language === 'en' ? 'Assign Buildings' : 'Bina Ata / Düzenle'}</span>
+                    <span className="ml-0.5 px-1.5 py-0.2 bg-blue-200 text-blue-900 rounded-md text-[10px] font-mono">
+                      {techSites.length}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEditMember(tech)}
+                    className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                    title={language === 'en' ? 'Edit Profile' : 'Profili Düzenle'}
+                  >
+                    <Pencil className="w-3.5 h-3.5 text-slate-500" />
+                    <span className="hidden sm:inline">{language === 'en' ? 'Edit' : 'Düzenle'}</span>
+                  </button>
                 </div>
               </div>
             );
@@ -737,6 +933,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       )}
 
       {/* 6. Reset Password Modal */}
+      {/* 5. Reset Password Modal */}
       {resettingTech && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-slate-100 overflow-hidden">
@@ -812,6 +1009,419 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 6. Edit Member Profile Modal */}
+      {editingTech && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden">
+            <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className={`w-8 h-8 rounded-xl ${editMemberColor} text-white font-bold text-xs flex items-center justify-center shadow-xs`}>
+                  {editMemberName ? editMemberName[0] : 'U'}
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm">
+                    {language === 'en' ? 'Edit Member Profile' : 'Ekip Üyesi Profilini Düzenle'}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-mono truncate max-w-[220px]">
+                    {editingTech.name} • {editingTech.role}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setEditingTech(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditMember} className="p-5 space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {t.memberNameLabel}
+                </label>
+                <div className="relative">
+                  <User className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    required
+                    value={editMemberName}
+                    onChange={(e) => setEditMemberName(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-semibold text-slate-900"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {t.memberRoleLabel}
+                </label>
+                <div className="relative">
+                  <Briefcase className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    required
+                    value={editMemberRole}
+                    onChange={(e) => setEditMemberRole(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 text-slate-900"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {t.memberEmailLabel}
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="email"
+                    required
+                    value={editMemberEmail}
+                    onChange={(e) => setEditMemberEmail(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-mono text-slate-900"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {t.memberPhoneLabel}
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    value={editMemberPhone}
+                    onChange={(e) => setEditMemberPhone(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-mono text-slate-900"
+                  />
+                </div>
+              </div>
+
+              {/* Avatar Color Picker */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  {language === 'en' ? 'Badge Color' : 'Rozet Rengi'}
+                </label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {[
+                    'bg-blue-600',
+                    'bg-emerald-600',
+                    'bg-purple-600',
+                    'bg-amber-600',
+                    'bg-rose-600',
+                    'bg-teal-600',
+                    'bg-indigo-600',
+                    'bg-slate-700',
+                  ].map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setEditMemberColor(color)}
+                      className={`w-7 h-7 rounded-lg ${color} transition-transform ${
+                        editMemberColor === color ? 'ring-2 ring-blue-500 ring-offset-2 scale-110' : 'opacity-80 hover:opacity-100'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Admin Privileges Toggle */}
+              <div className="pt-2">
+                <label className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100/70 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={editMemberIsAdmin}
+                    onChange={(e) => setEditMemberIsAdmin(e.target.checked)}
+                    className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <div>
+                    <span className="block text-xs font-bold text-slate-900">
+                      {language === 'en' ? 'Administrator Privileges' : 'Yönetici Yetkisi (Admin Portalı ve Şifre Yönetimi)'}
+                    </span>
+                    <span className="block text-[11px] text-slate-500">
+                      {language === 'en'
+                        ? 'Grants access to admin portal, member passwords and master data export.'
+                        : 'Bu üyeye tam operasyon yetkisi, şifre görme ve bina dağıtım kontrolü verir.'}
+                    </span>
+                  </div>
+                </label>
+              </div>
+
+              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingTech(null)}
+                  className="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  {t.cancelBtn}
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+                >
+                  {language === 'en' ? 'Save Profile Changes' : 'Değişiklikleri Kaydet'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 7. Assign Buildings to Technician Modal */}
+      {assigningTech && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+            {/* Header */}
+            <div className="bg-slate-900 text-white p-4 sm:p-5 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-2xl ${assigningTech.avatarColor || 'bg-blue-600'} flex items-center justify-center font-bold text-white text-base shadow-md`}>
+                  {assigningTech.name[0]}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-base text-white">
+                      {language === 'en' ? 'Manage Building Allocations' : 'Bina Atamalarını Yönet'}
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30">
+                      {assignedSiteIdsForModal.length} / {sites.length} {language === 'en' ? 'Assigned' : 'Atanmış'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 font-medium">
+                    {assigningTech.name} ({assigningTech.role})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setAssigningTech(null)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Filter & Search Bar */}
+            <div className="p-3 sm:p-4 bg-slate-50 border-b border-slate-200/80 space-y-2.5 shrink-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    value={assignModalSearch}
+                    onChange={(e) => setAssignModalSearch(e.target.value)}
+                    placeholder={language === 'en' ? 'Search buildings or brand...' : 'Bina adı veya asansör markası ara...'}
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="relative">
+                  <Filter className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <select
+                    value={assignModalNeighborhood}
+                    onChange={(e) => setAssignModalNeighborhood(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-700 font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">{language === 'en' ? 'All Neighborhoods' : 'Tüm Bölgeler'}</option>
+                    {Array.from(new Set(sites.map((s) => s.neighborhood))).filter(Boolean).map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Quick Actions & Filters */}
+              {(() => {
+                const visibleSites = sites.filter((s) => {
+                  if (assignModalNeighborhood !== 'all' && s.neighborhood !== assignModalNeighborhood) return false;
+                  if (assignModalSearch) {
+                    const q = assignModalSearch.toLowerCase();
+                    if (!s.name.toLowerCase().includes(q) && !s.address.toLowerCase().includes(q) && !s.elevatorBrand.toLowerCase().includes(q)) {
+                      return false;
+                    }
+                  }
+                  if (assignModalFilterMode === 'assigned') {
+                    return assignedSiteIdsForModal.includes(s.id);
+                  }
+                  if (assignModalFilterMode === 'other') {
+                    return !assignedSiteIdsForModal.includes(s.id);
+                  }
+                  return true;
+                });
+                const visibleIds = visibleSites.map((s) => s.id);
+
+                return (
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setAssignModalFilterMode('all')}
+                        className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+                          assignModalFilterMode === 'all'
+                            ? 'bg-blue-600 text-white font-bold'
+                            : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {language === 'en' ? 'All' : 'Tümü'} ({sites.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAssignModalFilterMode('assigned')}
+                        className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+                          assignModalFilterMode === 'assigned'
+                            ? 'bg-emerald-600 text-white font-bold'
+                            : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {language === 'en' ? 'Assigned' : 'Bu Teknisyende'} ({assignedSiteIdsForModal.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAssignModalFilterMode('other')}
+                        className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+                          assignModalFilterMode === 'other'
+                            ? 'bg-amber-600 text-white font-bold'
+                            : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {language === 'en' ? 'Unassigned / Others' : 'Diğerleri'} ({sites.length - assignedSiteIdsForModal.length})
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleSelectAllVisibleSites(visibleIds)}
+                        className="text-[11px] font-bold text-blue-600 hover:text-blue-800 transition-colors"
+                      >
+                        {language === 'en' ? 'Select Filtered' : 'Görünenleri Seç'}
+                      </button>
+                      <span className="text-slate-300">|</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeselectAllVisibleSites(visibleIds)}
+                        className="text-[11px] font-bold text-slate-500 hover:text-rose-600 transition-colors"
+                      >
+                        {language === 'en' ? 'Clear Filtered' : 'Görünenleri Kaldır'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Buildings Scroll List */}
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 divide-y divide-slate-100">
+              {(() => {
+                const visibleSites = sites.filter((s) => {
+                  if (assignModalNeighborhood !== 'all' && s.neighborhood !== assignModalNeighborhood) return false;
+                  if (assignModalSearch) {
+                    const q = assignModalSearch.toLowerCase();
+                    if (!s.name.toLowerCase().includes(q) && !s.address.toLowerCase().includes(q) && !s.elevatorBrand.toLowerCase().includes(q)) {
+                      return false;
+                    }
+                  }
+                  if (assignModalFilterMode === 'assigned') {
+                    return assignedSiteIdsForModal.includes(s.id);
+                  }
+                  if (assignModalFilterMode === 'other') {
+                    return !assignedSiteIdsForModal.includes(s.id);
+                  }
+                  return true;
+                });
+
+                if (visibleSites.length === 0) {
+                  return (
+                    <div className="py-12 text-center text-slate-400 text-xs">
+                      {language === 'en' ? 'No buildings match your filter.' : 'Filtreye uygun bina bulunamadı.'}
+                    </div>
+                  );
+                }
+
+                return visibleSites.map((site) => {
+                  const isChecked = assignedSiteIdsForModal.includes(site.id);
+                  const currentOwner = technicians.find((t) => t.email === site.assignedTechnicianEmail);
+                  const isAssignedToOther = site.assignedTechnicianEmail && site.assignedTechnicianEmail !== assigningTech.email;
+
+                  return (
+                    <div
+                      key={site.id}
+                      onClick={() => handleToggleSiteInAssignModal(site.id)}
+                      className={`p-3 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition-all ${
+                        isChecked
+                          ? 'bg-blue-50/80 hover:bg-blue-100/70 border border-blue-200'
+                          : 'hover:bg-slate-50 border border-transparent'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className="shrink-0 text-blue-600">
+                          {isChecked ? (
+                            <CheckSquare className="w-5 h-5 text-blue-600" />
+                          ) : (
+                            <Square className="w-5 h-5 text-slate-300" />
+                          )}
+                        </div>
+                        <div className="overflow-hidden">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-xs sm:text-sm text-slate-900 truncate">
+                              {site.name}
+                            </h4>
+                            <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700">
+                              {site.elevatorBrand || 'KONE'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 truncate">{site.neighborhood} • {site.address}</p>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 text-right">
+                        {isChecked ? (
+                          <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            {language === 'en' ? 'Assigned' : 'Atandı'}
+                          </span>
+                        ) : isAssignedToOther ? (
+                          <span className="px-2 py-1 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                            {language === 'en' ? `Currently: ${currentOwner?.name || 'Other'}` : `Şu an: ${currentOwner?.name || 'Diğer'}`}
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600">
+                            {language === 'en' ? 'Shared Pool' : 'Ortak Havuz'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
+              <div className="text-xs text-slate-600">
+                <span className="font-bold text-slate-900">{assignedSiteIdsForModal.length}</span> {language === 'en' ? 'buildings selected for' : 'bina seçildi:'}{' '}
+                <span className="font-semibold text-blue-700">{assigningTech.name}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAssigningTech(null)}
+                  className="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+                >
+                  {t.cancelBtn}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveAssignSites}
+                  className="px-4 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>{language === 'en' ? 'Save Building Allocations' : 'Atamaları Kaydet'}</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
