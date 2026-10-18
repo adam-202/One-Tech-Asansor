@@ -518,17 +518,17 @@ Google Maps: ${googleMapsUrl}`;
                 <div className="flex justify-between items-center py-1 border-b border-slate-200">
                   <span className="text-slate-500">Elevator Bank Units:</span>
                   <span className="font-bold font-mono text-slate-900">
-                    {site.elevatorUnits} Lifts ({site.elevatorBrand})
+                    {site.elevatorUnits ?? '–'} Lifts ({site.elevatorBrand})
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-1 border-b border-slate-200">
                   <span className="text-slate-500">Building Height:</span>
-                  <span className="font-semibold text-slate-900">{site.floors} Floors</span>
+                  <span className="font-semibold text-slate-900">{site.floors ? `${site.floors} Floors` : 'Unspecified'}</span>
                 </div>
                 <div className="flex justify-between items-center py-1 border-b border-slate-200">
                   <span className="text-slate-500">Machine Room:</span>
                   <span className="font-medium text-slate-800">
-                    {site.floors > 10 ? 'Rooftop Penthouse Room' : 'Basement Level B1'}
+                    {site.floors && site.floors > 10 ? 'Rooftop Penthouse Room' : site.floors ? 'Basement Level B1' : 'To be confirmed on-site'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-1 border-b border-slate-200">

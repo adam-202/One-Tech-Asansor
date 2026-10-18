@@ -1,6 +1,18 @@
 import React, { useState } from 'react';
 import { Technician } from '../types';
-import { Plus, Check, ChevronDown, Calendar, ShieldCheck, AlertTriangle, Globe, Database } from 'lucide-react';
+import {
+  Plus,
+  Check,
+  ChevronDown,
+  Calendar,
+  ShieldCheck,
+  AlertTriangle,
+  Globe,
+  Database,
+  Box,
+  LogOut,
+  Sparkles,
+} from 'lucide-react';
 import { Language, translations } from '../utils/translations';
 
 interface TopNavProps {
@@ -17,6 +29,9 @@ interface TopNavProps {
   visitedSitesCount: number;
   isSupabaseConnected?: boolean;
   onOpenSupabaseConnect?: () => void;
+  isAdmin?: boolean;
+  onOpen3D?: () => void;
+  onLogout?: () => void;
 }
 
 export const TopNav: React.FC<TopNavProps> = ({
@@ -33,19 +48,22 @@ export const TopNav: React.FC<TopNavProps> = ({
   visitedSitesCount,
   isSupabaseConnected = false,
   onOpenSupabaseConnect,
+  isAdmin = false,
+  onOpen3D,
+  onLogout,
 }) => {
   const [techDropdownOpen, setTechDropdownOpen] = useState(false);
   const t = translations[language];
   const completionPercentage = totalSitesCount > 0 ? Math.round((visitedSitesCount / totalSitesCount) * 100) : 0;
 
   return (
-    <header className="sticky top-0 z-40 bg-slate-900 border-b border-slate-800 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-white">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Zone 1: Brand Wordmark */}
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white shadow-md shadow-blue-500/20">
                 <ShieldCheck className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -58,7 +76,7 @@ export const TopNav: React.FC<TopNavProps> = ({
               </div>
             </div>
 
-            {/* Cycle Indicator */}
+            {/* Cycle Indicator (Desktop only) */}
             <div className="hidden xl:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs text-slate-300">
               <Calendar className="w-3.5 h-3.5 text-blue-400" />
               <span>Oct 2026 {t.currentCycle}</span>
@@ -69,8 +87,8 @@ export const TopNav: React.FC<TopNavProps> = ({
             </div>
           </div>
 
-          {/* Zone 2: Primary Nav Tabs */}
-          <nav className="flex items-center gap-1 sm:gap-2">
+          {/* Zone 2: Primary Nav Tabs (Hidden on mobile; handled by MobileBottomNav) */}
+          <nav className="hidden md:flex items-center gap-1 sm:gap-2">
             <button
               onClick={() => onSelectTab('routes')}
               className={`px-3 py-2 text-xs sm:text-sm font-medium rounded-lg transition-colors whitespace-nowrap ${
@@ -89,7 +107,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                   : 'text-slate-300 hover:text-white hover:bg-slate-800'
               }`}
             >
-              {t.sitesDirectory} <span className="font-mono text-xs opacity-75 hidden md:inline">({totalSitesCount})</span>
+              {t.sitesDirectory} <span className="font-mono text-xs opacity-75 hidden lg:inline">({totalSitesCount})</span>
             </button>
             <button
               onClick={() => onSelectTab('reports')}
@@ -102,30 +120,47 @@ export const TopNav: React.FC<TopNavProps> = ({
               {t.reportsExports}
             </button>
 
-            {/* Admin Portal Tab (Operations Director) */}
-            <button
-              onClick={() => onSelectTab('admin')}
-              className={`px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-                activeTab === 'admin'
-                  ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
-                  : 'text-amber-400 hover:text-amber-300 hover:bg-slate-800'
-              }`}
-              title={t.adminPortal}
-            >
-              <span>{t.adminPortal}</span>
-              <span className="px-1.5 py-0.2 rounded text-[10px] bg-amber-400/20 text-amber-300 font-mono font-bold">
-                {t.directorBadge}
-              </span>
-            </button>
+            {/* Admin Portal Tab (Only visible to Operations Director / Admin) */}
+            {isAdmin && (
+              <button
+                onClick={() => onSelectTab('admin')}
+                className={`px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-colors whitespace-nowrap flex items-center gap-1.5 ${
+                  activeTab === 'admin'
+                    ? 'bg-amber-500 text-slate-950 font-bold shadow-sm'
+                    : 'text-amber-400 hover:text-amber-300 hover:bg-slate-800'
+                }`}
+                title={t.adminPortal}
+              >
+                <span>{t.adminPortal}</span>
+                <span className="px-1.5 py-0.2 rounded text-[10px] bg-amber-400/20 text-amber-300 font-mono font-bold">
+                  {t.directorBadge}
+                </span>
+              </button>
+            )}
           </nav>
 
-          {/* Zone 3: Actions, Language Switcher & Profile */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          {/* Zone 3: Actions, 3D Launcher, Language Switcher & Profile */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* 3D Elevator Telematics Button */}
+            {onOpen3D && (
+              <button
+                onClick={onOpen3D}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-blue-700/80 to-indigo-700/80 hover:from-blue-600 hover:to-indigo-600 text-white border border-blue-400/30 shadow-xs active:scale-95 transition-all"
+                title="Launch 3D Elevator Digital Twin / 3D Asansör Simülasyonu"
+              >
+                <Box className="w-3.5 h-3.5 text-sky-300 animate-spin-slow" />
+                <span className="hidden sm:inline">3D Cabin</span>
+                <span className="px-1 py-0.2 bg-sky-400/20 text-[9px] font-mono text-sky-300 rounded">
+                  3D
+                </span>
+              </button>
+            )}
+
             {/* Supabase Cloud DB Status Pill */}
             {onOpenSupabaseConnect && (
               <button
                 onClick={onOpenSupabaseConnect}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all active:scale-95 shadow-xs ${
+                className={`inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-all active:scale-95 shadow-xs ${
                   isSupabaseConnected
                     ? 'bg-slate-800 hover:bg-slate-700 text-emerald-400 border-emerald-500/30'
                     : 'bg-amber-950/40 hover:bg-amber-900/40 text-amber-300 border-amber-600/40'
@@ -133,7 +168,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                 title={isSupabaseConnected ? 'Supabase Connected (Live)' : 'Connect Supabase Cloud Database'}
               >
                 <Database className={`w-3.5 h-3.5 ${isSupabaseConnected ? 'text-emerald-400' : 'text-amber-400'}`} />
-                <span className="hidden sm:inline">
+                <span className="hidden lg:inline">
                   {isSupabaseConnected ? 'DB: Live' : 'Connect DB'}
                 </span>
                 <span className={`w-1.5 h-1.5 rounded-full ${isSupabaseConnected ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-amber-400 animate-pulse'}`} />
@@ -143,17 +178,17 @@ export const TopNav: React.FC<TopNavProps> = ({
             {/* Language Toggle Button */}
             <button
               onClick={onToggleLanguage}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition-all active:scale-95 shadow-xs"
+              className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 hover:border-slate-600 transition-all active:scale-95 shadow-xs"
               title="Switch Language / Dil Değiştir"
             >
               <Globe className="w-3.5 h-3.5 text-blue-400" />
-              <span>{language === 'en' ? '🇹🇷 TR' : '🇺🇸 EN'}</span>
+              <span className="text-[11px] font-mono">{language === 'en' ? 'TR' : 'EN'}</span>
             </button>
 
-            {/* Quick Emergency / Fault Shortcut Button */}
+            {/* Quick Emergency / Fault Shortcut Button (Desktop) */}
             <button
               onClick={onOpenEmergencyFault}
-              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 active:scale-95 border border-rose-500 rounded-lg shadow-sm shadow-rose-900/30 transition-all whitespace-nowrap"
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 active:scale-95 border border-rose-500 rounded-lg shadow-sm shadow-rose-900/30 transition-all whitespace-nowrap"
               title={t.logEmergencyFault}
             >
               <AlertTriangle className="w-3.5 h-3.5 text-rose-200 animate-pulse" />
@@ -161,30 +196,31 @@ export const TopNav: React.FC<TopNavProps> = ({
               <span className="lg:hidden">{t.faultShortcut}</span>
             </button>
 
+            {/* Add Site Button (Desktop) */}
             <button
               onClick={onOpenAddSite}
-              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors whitespace-nowrap"
+              className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors whitespace-nowrap"
             >
               <Plus className="w-3.5 h-3.5 text-blue-400" />
               <span>{t.addSite}</span>
             </button>
 
-            {/* Technician Profile Selector */}
+            {/* Technician Profile Selector & Logout */}
             <div className="relative">
               <button
                 onClick={() => setTechDropdownOpen(!techDropdownOpen)}
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-800/90 border border-slate-700 hover:border-slate-600 text-left transition-colors"
+                className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1.5 rounded-lg bg-slate-800/90 border border-slate-700 hover:border-slate-600 text-left transition-colors cursor-pointer"
                 aria-expanded={techDropdownOpen}
               >
                 <div className={`w-7 h-7 rounded-full ${currentTechnician.avatarColor || 'bg-blue-600'} flex items-center justify-center text-xs font-bold text-white shrink-0`}>
                   {currentTechnician.name[0]}
                 </div>
                 <div className="hidden sm:block text-left">
-                  <div className="text-xs font-medium text-white truncate max-w-[100px]">
+                  <div className="text-xs font-medium text-white truncate max-w-[90px]">
                     {currentTechnician.name}
                   </div>
-                  <div className="text-[10px] text-slate-400 font-mono truncate max-w-[100px]">
-                    {currentTechnician.email.split('@')[0]}
+                  <div className="text-[10px] text-slate-400 font-mono truncate max-w-[90px]">
+                    {currentTechnician.isAdmin ? 'Director' : 'Tech'}
                   </div>
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
@@ -226,6 +262,22 @@ export const TopNav: React.FC<TopNavProps> = ({
                         )}
                       </button>
                     ))}
+
+                    {/* Sign Out Option */}
+                    {onLogout && (
+                      <div className="border-t border-slate-800 pt-1 mt-1">
+                        <button
+                          onClick={() => {
+                            setTechDropdownOpen(false);
+                            onLogout();
+                          }}
+                          className="w-full px-3 py-2 text-left flex items-center gap-2 text-xs text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors"
+                        >
+                          <LogOut className="w-3.5 h-3.5 shrink-0" />
+                          <span>{language === 'en' ? 'Sign Out of Account' : 'Hesaptan Çıkış Yap'}</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
@@ -236,3 +288,4 @@ export const TopNav: React.FC<TopNavProps> = ({
     </header>
   );
 };
+

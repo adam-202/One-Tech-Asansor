@@ -40,9 +40,9 @@ export interface BuildingSite {
   category: SiteCategory; // 'private' (assigned to tech email) or 'public' (shared / emergency pool)
   latitude: number;
   longitude: number;
-  floors: number;
-  elevatorUnits: number;
-  elevatorBrand: string; // Otis, Schindler, KONE, Thyssenkrupp, Mitsubishi, etc.
+  floors?: number | null; // null/undefined if not yet verified on site
+  elevatorUnits?: number | null; // null/undefined if not yet verified
+  elevatorBrand: string; // KONE (predominant), Otis, Schindler, Thyssenkrupp, Mitsubishi, etc.
   elevatorNumbers?: string; // e.g. "L1 (Pass), L2 (Pass), L3 (Service / Freight)"
   assignedTechnicianEmail: string; // email if private, or 'shared@elevatortech.io' if public
   managerName: string;
@@ -63,6 +63,15 @@ export interface Technician {
   role: string;
   assignedCount: number;
   avatarColor: string;
+  password?: string; // Admin-managed credential
+  isAdmin?: boolean; // True for Adam / Operations Director
+}
+
+export interface GpsCoordinates {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  timestamp?: number;
 }
 
 export interface RouteStop {
@@ -70,4 +79,6 @@ export interface RouteStop {
   site: BuildingSite;
   distanceFromPrevKm: number;
   estimatedTravelMin: number;
+  isOrigin?: boolean;
 }
+

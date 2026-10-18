@@ -15,6 +15,9 @@ import { SiteModal } from './components/SiteModal';
 import { EmergencyFaultModal } from './components/EmergencyFaultModal';
 import { AdminPortal } from './components/AdminPortal';
 import { SupabaseConnectModal } from './components/SupabaseConnectModal';
+import { LoginPage } from './components/LoginPage';
+import { Elevator3DExperience } from './components/Elevator3DExperience';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { CheckCircle2, RotateCcw } from 'lucide-react';
 import { Language, translations } from './utils/translations';
 import { isSupabaseConfigured, testSupabaseConnection } from './utils/supabase';
@@ -31,6 +34,7 @@ import {
 const STORAGE_SITES_KEY = 'elevatorops_sites_v4_clean';
 const STORAGE_TECHS_KEY = 'elevatorops_technicians_v4';
 const STORAGE_LANG_KEY = 'elevatorops_language';
+const STORAGE_AUTH_KEY = 'elevatorops_auth_session';
 
 export default function App() {
   // 1. Language state (defaults to English 'en')
@@ -76,18 +80,37 @@ export default function App() {
     }
   }, [technicians]);
 
-  // Current active user (defaults to Adam)
+  // Authentication State
+  const [authenticatedUser, setAuthenticatedUser] = useState<Technician | null>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_AUTH_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error('Error reading auth session:', e);
+    }
+    return null;
+  });
+
+  // Current active technician (defaults to authenticatedUser or Adam)
   const [currentTechnician, setCurrentTechnician] = useState<Technician>(
-    technicians[0] || INITIAL_TECHNICIANS[0]
+    () => authenticatedUser || technicians[0] || INITIAL_TECHNICIANS[0]
   );
 
   useEffect(() => {
-    // If current technician was removed or changed, keep it synced
-    const found = technicians.find((tech) => tech.id === currentTechnician.id);
-    if (!found && technicians.length > 0) {
-      setCurrentTechnician(technicians[0]);
+    if (authenticatedUser) {
+      const found = technicians.find((t) => t.id === authenticatedUser.id || t.email === authenticatedUser.email);
+      if (found) {
+        setCurrentTechnician(found);
+      }
+    } else {
+      const found = technicians.find((tech) => tech.id === currentTechnician.id);
+      if (!found && technicians.length > 0) {
+        setCurrentTechnician(technicians[0]);
+      }
     }
-  }, [technicians, currentTechnician]);
+  }, [technicians, authenticatedUser]);
 
   // 3. Sites state
   const [sites, setSites] = useState<BuildingSite[]>(() => {
@@ -160,9 +183,50 @@ export default function App() {
   const [isSiteModalOpen, setIsSiteModalOpen] = useState<boolean>(false);
   const [isEmergencyFaultModalOpen, setIsEmergencyFaultModalOpen] = useState<boolean>(false);
   const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState<boolean>(false);
+  const [is3DModalOpen, setIs3DModalOpen] = useState<boolean>(false);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean>(false);
   const [editingSite, setEditingSite] = useState<BuildingSite | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Authentication Handlers & Role Gate
+  const isAdmin = Boolean(
+    authenticatedUser?.isAdmin ||
+    authenticatedUser?.email === 'adam.osama60@gmail.com' ||
+    authenticatedUser?.name.toLowerCase().includes('adam')
+  );
+
+  const handleLoginSuccess = (user: Technician) => {
+    setAuthenticatedUser(user);
+    setCurrentTechnician(user);
+    try {
+      localStorage.setItem(STORAGE_AUTH_KEY, JSON.stringify(user));
+    } catch (e) {}
+    showToast(
+      language === 'en'
+        ? `Welcome back, ${user.name}!`
+        : `Hoş geldiniz, ${user.name}!`
+    );
+  };
+
+  const handleLogout = () => {
+    try {
+      localStorage.removeItem(STORAGE_AUTH_KEY);
+    } catch (e) {}
+    setAuthenticatedUser(null);
+    setActiveTab('routes');
+    showToast(
+      language === 'en'
+        ? 'Signed out successfully.'
+        : 'Başarıyla çıkış yapıldı.'
+    );
+  };
+
+  // If non-admin logged in and currently on admin tab, safely route to routes
+  useEffect(() => {
+    if (authenticatedUser && !isAdmin && activeTab === 'admin') {
+      setActiveTab('routes');
+    }
+  }, [authenticatedUser, isAdmin, activeTab]);
 
   // Auto-connect to Supabase cloud if configured
   useEffect(() => {
@@ -201,6 +265,20 @@ export default function App() {
     setTechnicians((prev) => [...prev, newTech]);
     if (isSupabaseConnected) {
       upsertTechnicianToSupabase(newTech);
+    }
+  };
+
+  // Update Member (e.g. password, admin privileges)
+  const handleUpdateTechnician = (updatedTech: Technician) => {
+    setTechnicians((prev) => prev.map((t) => (t.id === updatedTech.id ? updatedTech : t)));
+    if (isSupabaseConnected) {
+      upsertTechnicianToSupabase(updatedTech);
+    }
+    if (authenticatedUser?.id === updatedTech.id) {
+      setAuthenticatedUser(updatedTech);
+      try {
+        localStorage.setItem(STORAGE_AUTH_KEY, JSON.stringify(updatedTech));
+      } catch (e) {}
     }
   };
 
@@ -433,8 +511,20 @@ export default function App() {
 
   const visitedCount = sites.filter((s) => s.lastVisit).length;
 
+  // Authentication Gate: Render dedicated Login Page if not signed in
+  if (!authenticatedUser) {
+    return (
+      <LoginPage
+        technicians={technicians}
+        onLoginSuccess={handleLoginSuccess}
+        language={language}
+        onToggleLanguage={toggleLanguage}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col text-slate-900">
+    <div className="min-h-screen bg-slate-100 flex flex-col text-slate-900 selection:bg-blue-600 selection:text-white">
       {/* Top Bar with Language Switcher & Profile */}
       <TopNav
         activeTab={activeTab}
@@ -453,10 +543,13 @@ export default function App() {
         visitedSitesCount={visitedCount}
         isSupabaseConnected={isSupabaseConnected}
         onOpenSupabaseConnect={() => setIsSupabaseModalOpen(true)}
+        isAdmin={isAdmin}
+        onOpen3D={() => setIs3DModalOpen(true)}
+        onLogout={handleLogout}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Main Content Area (extra bottom padding on mobile for MobileBottomNav) */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-5 pb-28 md:pb-6">
         {activeTab === 'routes' && (
           <RoutePlannerView
             sites={sites}
@@ -464,7 +557,7 @@ export default function App() {
             currentTechnician={currentTechnician}
             language={language}
             onUpdateSiteLocation={handleUpdateSiteLocation}
-            isAdmin={true}
+            isAdmin={isAdmin}
             onOpenInspect={(site) => setInspectingSite(site)}
             onOpenAddSite={() => {
               setEditingSite(null);
@@ -504,6 +597,7 @@ export default function App() {
             onDeleteSite={handleDeleteSite}
             onBatchReassign={handleBatchReassign}
             onAddTechnician={handleAddTechnician}
+            onUpdateTechnician={handleUpdateTechnician}
             onDeleteTechnician={handleDeleteTechnician}
             onResetData={handleResetData}
             onOpenSupabaseConnect={() => setIsSupabaseModalOpen(true)}
@@ -521,7 +615,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-4 px-4 text-xs text-slate-500">
+      <footer className="bg-white border-t border-slate-200 py-4 px-4 text-xs text-slate-500 mb-16 md:mb-0">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <span className="font-semibold text-slate-700">ElevatorOps</span>
@@ -532,7 +626,7 @@ export default function App() {
           <div className="flex items-center gap-4">
             <button
               onClick={handleResetData}
-              className="text-slate-400 hover:text-slate-700 flex items-center gap-1 transition-colors"
+              className="text-slate-400 hover:text-slate-700 flex items-center gap-1 transition-colors cursor-pointer"
               title="Reset data"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -543,6 +637,25 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Mobile Bottom Navigation Bar (Thumb friendly, accessible navigation) */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        onOpenEmergency={() => setIsEmergencyFaultModalOpen(true)}
+        isAdmin={isAdmin}
+        language={language}
+        unreadAlertsCount={sites.filter((s) => s.priority === 'fault_alert').length}
+      />
+
+      {/* 3D Digital Twin Elevator Telematics Modal */}
+      {is3DModalOpen && (
+        <Elevator3DExperience
+          language={language}
+          onClose={() => setIs3DModalOpen(false)}
+          isFloating={true}
+        />
+      )}
 
       {/* On-Site Inspection & Visit Modal */}
       <VisitInspectionModal
@@ -600,7 +713,7 @@ export default function App() {
 
       {/* Floating Toast */}
       {toastMessage && (
-        <div className="fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-2.5 animate-fadeIn">
+        <div className="fixed bottom-20 md:bottom-5 right-5 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-2.5 animate-fadeIn">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{toastMessage}</span>
         </div>

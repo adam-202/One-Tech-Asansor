@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { BuildingSite, RouteStop, Technician } from '../types';
 import { Language, translations } from '../utils/translations';
 import {
@@ -29,6 +29,7 @@ import {
   User,
   Plus,
   Eye,
+  Navigation,
 } from 'lucide-react';
 import { SiteMapIcon } from './SiteMapIcon';
 import { LocationPreviewModal } from './LocationPreviewModal';
@@ -62,6 +63,51 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
   const [activeStopIndex, setActiveStopIndex] = useState<number>(0);
   const [previewLocationSite, setPreviewLocationSite] = useState<BuildingSite | null>(null);
 
+  // Device GPS Location State
+  const [userGps, setUserGps] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [isLocating, setIsLocating] = useState<boolean>(false);
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
+
+  const handleRequestDeviceLocation = () => {
+    if (!navigator.geolocation) {
+      alert(language === 'en' ? 'Geolocation is not supported on this device.' : 'Cihazınızda konum servisi desteklenmiyor.');
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserGps({
+          latitude: Number(pos.coords.latitude.toFixed(6)),
+          longitude: Number(pos.coords.longitude.toFixed(6)),
+        });
+        setGpsAccuracy(Math.round(pos.coords.accuracy));
+        setIsLocating(false);
+      },
+      (err) => {
+        console.warn('GPS location request error:', err);
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 15000 }
+    );
+  };
+
+  // Attempt auto-locating on initial mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserGps({
+            latitude: Number(pos.coords.latitude.toFixed(6)),
+            longitude: Number(pos.coords.longitude.toFixed(6)),
+          });
+          setGpsAccuracy(Math.round(pos.coords.accuracy));
+        },
+        () => {},
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+      );
+    }
+  }, []);
+
   // Extract unique neighborhoods from sites
   const neighborhoods = useMemo(() => {
     const set = new Set<string>();
@@ -94,7 +140,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
     if (queuedSiteIds.length === 0) {
       const initialPool = unvisitedCandidateSites.slice(0, targetBatchSize);
       if (initialPool.length > 0) {
-        return optimizeRouteSequence(initialPool);
+        return optimizeRouteSequence(initialPool, userGps?.latitude, userGps?.longitude);
       }
       return [];
     }
@@ -140,13 +186,13 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
   const handleSuggestOptimizedOrder = () => {
     const pending = unvisitedCandidateSites;
     if (pending.length === 0) {
-      alert('All assigned sites in this filter have already been completed for this month!');
+      alert(language === 'en' ? 'All assigned sites in this filter have already been completed for this month!' : 'Bu filtredeki tüm binaların bu ayki bakımı tamamlanmış!');
       return;
     }
 
-    // Take top batch and apply TSP sequence optimization
+    // Take top batch and apply TSP sequence optimization with user GPS start coordinate
     const batch = pending.slice(0, targetBatchSize);
-    const optimized = optimizeRouteSequence(batch);
+    const optimized = optimizeRouteSequence(batch, userGps?.latitude, userGps?.longitude);
     setQueuedSiteIds(optimized.map((s) => s.site.id));
     setActiveStopIndex(0);
   };
@@ -164,7 +210,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
     if (currentStops.some((s) => s.site.id === site.id)) return;
     const newSiteList = [...currentStops.map((s) => s.site), site];
     // Re-optimize with the newly added site included
-    const reOptimized = optimizeRouteSequence(newSiteList);
+    const reOptimized = optimizeRouteSequence(newSiteList, userGps?.latitude, userGps?.longitude);
     setQueuedSiteIds(reOptimized.map((s) => s.site.id));
   };
 
@@ -214,11 +260,31 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
             </p>
           </div>
 
-          {/* Quick Actions */}
+          {/* Quick Actions with GPS support */}
           <div className="flex flex-wrap items-center gap-2">
+            {/* Live Device GPS Pill */}
+            <button
+              type="button"
+              onClick={handleRequestDeviceLocation}
+              className={`inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                userGps
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-300 shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+              }`}
+              title={userGps ? `GPS Live (Accuracy ±${gpsAccuracy || 10}m)` : 'Access Device GPS Location'}
+            >
+              <Navigation className={`w-3.5 h-3.5 ${isLocating ? 'animate-spin text-blue-600' : userGps ? 'text-emerald-600' : 'text-slate-500'}`} />
+              <span>
+                {userGps
+                  ? (language === 'en' ? 'Live GPS Active' : 'Canlı GPS Aktif')
+                  : (language === 'en' ? 'Use Device GPS' : 'Cihaz Konumunu Kullan')}
+              </span>
+              {userGps && <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />}
+            </button>
+
             <button
               onClick={handleSuggestOptimizedOrder}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-md shadow-blue-600/20 active:scale-95 transition-all"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-md shadow-blue-600/20 active:scale-95 transition-all cursor-pointer"
               title="Compute shortest Hamiltonian visitation sequence"
             >
               <Sparkles className="w-4 h-4 text-blue-200" />
@@ -228,7 +294,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
             <button
               onClick={handleInvertRouteOrder}
               disabled={currentStops.length < 2}
-              className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-all disabled:opacity-40 cursor-pointer"
               title="Reverse visitation direction"
             >
               <ArrowLeftRight className="w-3.5 h-3.5" />
@@ -236,14 +302,18 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
             </button>
 
             <a
-              href={buildGoogleMapsRouteUrl(currentStops)}
+              href={buildGoogleMapsRouteUrl(currentStops, userGps)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-all active:scale-95 shadow-sm"
               title="Open full waypoint sequence in Google Maps app"
             >
               <Compass className="w-4 h-4 text-blue-400" />
-              <span>Open in Google Maps</span>
+              <span>
+                {userGps
+                  ? (language === 'en' ? 'Navigate from My Location' : 'Konumumdan Rota Başlat')
+                  : (language === 'en' ? 'Open in Google Maps' : 'Google Haritalar\'da Aç')}
+              </span>
               <ExternalLink className="w-3 h-3 text-slate-400" />
             </a>
           </div>
@@ -379,7 +449,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
         </div>
       </div>
 
-      {/* 3. D3 Geo Projection Map Canvas */}
+      {/* 3. D3 Geo Projection Map Canvas with Live GPS Device Tracking */}
       <InteractiveRealMap
         stops={currentStops}
         activeStopIndex={activeStopIndex}
@@ -390,6 +460,9 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
         onAddSiteToRoute={handleAddSiteToRoute}
         onUpdateSiteLocation={onUpdateSiteLocation}
         isAdmin={isAdmin}
+        userGps={userGps}
+        onRequestLocation={handleRequestDeviceLocation}
+        isLocating={isLocating}
       />
 
       {/* 4. Shift Completion Progress Bar */}

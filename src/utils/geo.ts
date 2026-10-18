@@ -137,21 +137,31 @@ export function optimizeRouteSequence(
  * Builds a direct Google Maps multi-stop directions URL
  * Suitable for launching in browser or mobile Google Maps app for GPS turn-by-turn navigation.
  */
-export function buildGoogleMapsRouteUrl(stops: RouteStop[]): string {
+export function buildGoogleMapsRouteUrl(
+  stops: RouteStop[],
+  userGps?: { latitude: number; longitude: number } | null
+): string {
   if (stops.length === 0) return 'https://www.google.com/maps';
 
-  if (stops.length === 1) {
+  if (stops.length === 1 && !userGps) {
     const s = stops[0].site;
     return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
       `${s.latitude},${s.longitude}`
     )}`;
   }
 
-  const origin = `${stops[0].site.latitude},${stops[0].site.longitude}`;
+  const origin = userGps
+    ? `${userGps.latitude},${userGps.longitude}`
+    : `${stops[0].site.latitude},${stops[0].site.longitude}`;
+
   const destination = `${stops[stops.length - 1].site.latitude},${stops[stops.length - 1].site.longitude}`;
 
-  const waypoints = stops
-    .slice(1, stops.length - 1)
+  // If userGps is provided, all stops up to the last one are waypoints
+  const waypointStops = userGps
+    ? stops.slice(0, stops.length - 1)
+    : stops.slice(1, stops.length - 1);
+
+  const waypoints = waypointStops
     .map((stop) => `${stop.site.latitude},${stop.site.longitude}`)
     .join('|');
 

@@ -28,6 +28,9 @@ interface InteractiveRealMapProps {
   onAddSiteToRoute?: (site: BuildingSite) => void;
   onUpdateSiteLocation?: (siteId: string, lat: number, lng: number) => void;
   isAdmin?: boolean;
+  userGps?: { latitude: number; longitude: number } | null;
+  onRequestLocation?: () => void;
+  isLocating?: boolean;
 }
 
 export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
@@ -40,6 +43,9 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
   onAddSiteToRoute,
   onUpdateSiteLocation,
   isAdmin = false,
+  userGps,
+  onRequestLocation,
+  isLocating = false,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -133,9 +139,42 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
       routeLayerRef.current = null;
     }
 
-    if (stops.length > 1) {
-      const latlngs: [number, number][] = stops.map((s) => [s.site.latitude, s.site.longitude]);
-      const polyline = L.polyline(latlngs, {
+    // 1. Live Device GPS Radar Pin
+    if (userGps) {
+      const gpsPulseIcon = L.divIcon({
+        className: 'custom-live-gps-pin',
+        html: `
+          <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+            <span style="position: absolute; width: 36px; height: 36px; border-radius: 50%; background-color: #38bdf8; opacity: 0.4; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+            <span style="position: absolute; width: 22px; height: 22px; border-radius: 50%; background-color: #0284c7; opacity: 0.3;"></span>
+            <span style="width: 14px; height: 14px; border-radius: 50%; background-color: #2563eb; border: 2.5px solid #ffffff; box-shadow: 0 0 10px rgba(37,99,235,0.8); position: relative; z-index: 10;"></span>
+          </div>
+        `,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+      });
+
+      const gpsMarker = L.marker([userGps.latitude, userGps.longitude], {
+        icon: gpsPulseIcon,
+        zIndexOffset: 3000,
+      });
+
+      gpsMarker.bindTooltip(
+        `<div style="font-size: 11px; font-weight: bold; color: #1e3a8a;">📍 Sizin Canlı Konumunuz (Saha GPS)</div>`,
+        { direction: 'top', offset: [0, -18] }
+      );
+      markersGroup.addLayer(gpsMarker);
+    }
+
+    // 2. Route Polyline (Originating from userGps if present, else stop 1)
+    const routePoints: [number, number][] = [];
+    if (userGps && stops.length > 0) {
+      routePoints.push([userGps.latitude, userGps.longitude]);
+    }
+    stops.forEach((s) => routePoints.push([s.site.latitude, s.site.longitude]));
+
+    if (routePoints.length > 1) {
+      const polyline = L.polyline(routePoints, {
         color: '#2563eb',
         weight: 5,
         opacity: 0.85,
@@ -276,14 +315,20 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
 
       markersGroup.addLayer(marker);
     });
-  }, [stops, allSitesInCluster, activeStopIndex, isAdjustMode, selectedSiteForAdjust]);
+  }, [stops, allSitesInCluster, activeStopIndex, isAdjustMode, selectedSiteForAdjust, userGps]);
 
   const handleRecenter = () => {
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    if (stops.length > 0) {
-      const bounds = L.latLngBounds(stops.map((s) => [s.site.latitude, s.site.longitude]));
+    const points: [number, number][] = [];
+    if (userGps) {
+      points.push([userGps.latitude, userGps.longitude]);
+    }
+    stops.forEach((s) => points.push([s.site.latitude, s.site.longitude]));
+
+    if (points.length > 0) {
+      const bounds = L.latLngBounds(points);
       map.fitBounds(bounds, { padding: [50, 50] });
     } else if (allSitesInCluster.length > 0) {
       const bounds = L.latLngBounds(allSitesInCluster.map((s) => [s.latitude, s.longitude]));
@@ -300,7 +345,7 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
   };
 
   const totalKm = stops.reduce((acc, s) => acc + s.distanceFromPrevKm, 0);
-  const googleMapsUrl = buildGoogleMapsRouteUrl(stops);
+  const googleMapsUrl = buildGoogleMapsRouteUrl(stops, userGps);
 
   return (
     <div className="relative w-full h-[520px] rounded-2xl overflow-hidden border border-slate-300 shadow-md">
@@ -315,11 +360,17 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
           rel="noopener noreferrer"
           className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-xl px-3 py-2 shadow-lg flex items-center gap-2 text-xs font-semibold text-slate-800 hover:text-blue-600 transition-all group"
         >
-          <div className="w-6 h-6 rounded-md bg-blue-600 text-white flex items-center justify-center shrink-0">
+          <div className={`w-6 h-6 rounded-md ${userGps ? 'bg-emerald-600' : 'bg-blue-600'} text-white flex items-center justify-center shrink-0`}>
             <Navigation className="w-3.5 h-3.5" />
           </div>
-          <span>{stops.length} Durak Rotası</span>
-          <span className="text-[11px] text-slate-500 font-mono">({totalKm.toFixed(1)} km)</span>
+          <div className="flex flex-col text-left">
+            <span className="leading-tight">
+              {userGps ? '📍 Canlı GPS ile Başlat' : `${stops.length} Durak Rotası`}
+            </span>
+            <span className="text-[10px] text-slate-500 font-mono">
+              {stops.length} bina • {totalKm.toFixed(1)} km
+            </span>
+          </div>
           <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-blue-600" />
         </a>
 
@@ -421,11 +472,30 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
         </div>
       )}
 
-      {/* 5. Bottom Controls: Recenter */}
+      {/* 5. Bottom Controls: Recenter & GPS Locate */}
       <div className="absolute bottom-5 right-3 z-10 flex flex-col items-center gap-2 pointer-events-auto">
+        {onRequestLocation && (
+          <button
+            onClick={() => {
+              onRequestLocation();
+              if (userGps && mapInstanceRef.current) {
+                mapInstanceRef.current.flyTo([userGps.latitude, userGps.longitude], 16, { animate: true });
+              }
+            }}
+            className={`w-9 h-9 rounded-lg shadow-md border flex items-center justify-center transition-all cursor-pointer ${
+              userGps
+                ? 'bg-blue-600 text-white border-blue-700 shadow-blue-500/30'
+                : 'bg-white/95 hover:bg-white text-slate-700 border-slate-200'
+            }`}
+            title={userGps ? 'Konumuma Git (GPS Aktif)' : 'Cihaz Konumunu Al'}
+          >
+            <Navigation className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
+          </button>
+        )}
+
         <button
           onClick={handleRecenter}
-          className="w-9 h-9 bg-white/95 hover:bg-white text-slate-700 rounded-lg shadow-md border border-slate-200 flex items-center justify-center transition-colors"
+          className="w-9 h-9 bg-white/95 hover:bg-white text-slate-700 rounded-lg shadow-md border border-slate-200 flex items-center justify-center transition-colors cursor-pointer"
           title="Tüm Binaları Göster ve Ortala"
         >
           <Crosshair className="w-4 h-4 text-blue-600" />

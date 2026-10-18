@@ -20,6 +20,11 @@ import {
   User,
   Shield,
   Database,
+  KeyRound,
+  Eye,
+  EyeOff,
+  Sparkles,
+  Lock,
 } from 'lucide-react';
 import { exportSitesToCsv } from '../utils/exportReport';
 import { Language, translations } from '../utils/translations';
@@ -33,6 +38,7 @@ interface AdminPortalProps {
   onDeleteSite: (siteId: string) => void;
   onBatchReassign: (targetEmail: string, siteIds: string[]) => void;
   onAddTechnician: (tech: Technician) => void;
+  onUpdateTechnician?: (tech: Technician) => void;
   onDeleteTechnician: (techId: string) => void;
   onResetData: () => void;
   onOpenSupabaseConnect?: () => void;
@@ -47,6 +53,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onDeleteSite,
   onBatchReassign,
   onAddTechnician,
+  onUpdateTechnician,
   onDeleteTechnician,
   onResetData,
   onOpenSupabaseConnect,
@@ -63,8 +70,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
   const [newMemberName, setNewMemberName] = useState('');
   const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [newMemberPassword, setNewMemberPassword] = useState('tech123');
   const [newMemberPhone, setNewMemberPhone] = useState('');
   const [newMemberRole, setNewMemberRole] = useState('');
+  const [newMemberIsAdmin, setNewMemberIsAdmin] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+
+  // Reset Password Modal State
+  const [resettingTech, setResettingTech] = useState<Technician | null>(null);
+  const [resetPasswordInput, setResetPasswordInput] = useState('');
+  const [revealedPasswords, setRevealedPasswords] = useState<Record<string, boolean>>({});
+
 
   const filteredSites = sites.filter((s) => {
     if (selectedTechFilter !== 'all' && s.assignedTechnicianEmail !== selectedTechFilter) return false;
@@ -116,6 +132,33 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     setTimeout(() => setSuccessToast(null), 2500);
   };
 
+  const handleOpenResetPassword = (tech: Technician) => {
+    setResettingTech(tech);
+    setResetPasswordInput(tech.password || (tech.isAdmin ? 'onetech2026' : 'tech123'));
+  };
+
+  const handleSavePasswordReset = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resettingTech || !resetPasswordInput.trim()) return;
+
+    const updatedTech: Technician = {
+      ...resettingTech,
+      password: resetPasswordInput.trim(),
+    };
+
+    if (onUpdateTechnician) {
+      onUpdateTechnician(updatedTech);
+    }
+    setResettingTech(null);
+    setResetPasswordInput('');
+    setSuccessToast(
+      language === 'en'
+        ? `Login password updated for ${updatedTech.name}!`
+        : `${updatedTech.name} için giriş şifresi güncellendi!`
+    );
+    setTimeout(() => setSuccessToast(null), 3500);
+  };
+
   const handleSaveNewMember = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMemberName.trim() || !newMemberEmail.trim()) return;
@@ -127,6 +170,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       id: `tech-${Date.now()}`,
       name: newMemberName.trim(),
       email: newMemberEmail.trim(),
+      password: newMemberPassword.trim() || 'tech123',
+      isAdmin: newMemberIsAdmin,
       phone: newMemberPhone.trim(),
       role: newMemberRole.trim() || (language === 'en' ? 'Field Service Technician' : 'Saha Servis Teknisyeni'),
       assignedCount: 0,
@@ -136,8 +181,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     onAddTechnician(newTech);
     setNewMemberName('');
     setNewMemberEmail('');
+    setNewMemberPassword('tech123');
     setNewMemberPhone('');
     setNewMemberRole('');
+    setNewMemberIsAdmin(false);
     setIsAddMemberOpen(false);
     setSuccessToast(t.memberAddedToast);
     setTimeout(() => setSuccessToast(null), 3500);
@@ -241,7 +288,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             const techSites = sites.filter((s) => s.assignedTechnicianEmail === tech.email);
             const visitedCount = techSites.filter((s) => Boolean(s.lastVisit)).length;
             const pct = techSites.length > 0 ? Math.round((visitedCount / techSites.length) * 100) : 0;
-            const isDirector = tech.email === 'adam.osama60@gmail.com' || tech.name.toLowerCase().includes('adam');
+            const isDirector = tech.isAdmin || tech.email === 'adam.osama60@gmail.com' || tech.name.toLowerCase().includes('adam');
+            const currentPass = tech.password || (isDirector ? 'onetech2026' : 'tech123');
 
             return (
               <div
@@ -257,7 +305,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       <div className="flex items-center gap-1.5">
                         <h3 className="font-bold text-sm text-slate-900">{tech.name}</h3>
                         {isDirector && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-100 text-blue-700 font-medium">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-100 text-blue-700 font-bold border border-blue-200">
                             Admin
                           </span>
                         )}
@@ -271,7 +319,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   {!isDirector ? (
                     <button
                       onClick={() => handleDeleteMember(tech)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                       title={t.removeMemberBtn}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -279,6 +327,43 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   ) : (
                     <Shield className="w-4 h-4 text-blue-600 shrink-0" />
                   )}
+                </div>
+
+                {/* Account Password & Credentials Pill */}
+                <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-200/80 flex items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-1.5 overflow-hidden">
+                    <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      {language === 'en' ? 'Pass:' : 'Şifre:'}
+                    </span>
+                    <span className="font-mono text-[11px] text-slate-800 font-bold tracking-wider">
+                      {revealedPasswords[tech.id] ? currentPass : '••••••••'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setRevealedPasswords((prev) => ({
+                          ...prev,
+                          [tech.id]: !prev[tech.id],
+                        }))
+                      }
+                      className="text-slate-400 hover:text-slate-700 p-0.5 cursor-pointer"
+                      title="Reveal password"
+                    >
+                      {revealedPasswords[tech.id] ? (
+                        <EyeOff className="w-3.5 h-3.5" />
+                      ) : (
+                        <Eye className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenResetPassword(tech)}
+                    className="px-2 py-1 text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md border border-blue-200 transition-colors cursor-pointer"
+                  >
+                    {language === 'en' ? 'Change' : 'Şifre Değiştir'}
+                  </button>
                 </div>
 
                 {/* Progress Bar & Site Count */}
@@ -542,6 +627,44 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {language === 'en' ? 'Login Password *' : 'Giriş Şifresi *'}
+                </label>
+                <div className="relative flex items-center">
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    required
+                    value={newMemberPassword}
+                    onChange={(e) => setNewMemberPassword(e.target.value)}
+                    placeholder="e.g. tech123"
+                    className="w-full pl-9 pr-20 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-mono font-medium"
+                  />
+                  <div className="absolute right-2 flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewMemberPassword(`tech${Math.floor(100 + Math.random() * 900)}`)}
+                      className="text-[10px] text-blue-600 hover:text-blue-800 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 font-medium"
+                    >
+                      {language === 'en' ? 'Gen' : 'Oto'}
+                    </button>
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  {language === 'en'
+                    ? 'Default is tech123. Employee will use this password to sign in.'
+                    : 'Varsayılan tech123. Çalışan bu şifre ile giriş yapacaktır.'}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
                   {t.memberRoleLabel}
                 </label>
                 <div className="relative">
@@ -572,19 +695,120 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </div>
               </div>
 
+              {/* Admin Access Checkbox */}
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-start gap-2.5">
+                <input
+                  type="checkbox"
+                  id="adminRoleCheckbox"
+                  checked={newMemberIsAdmin}
+                  onChange={(e) => setNewMemberIsAdmin(e.target.checked)}
+                  className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                />
+                <label htmlFor="adminRoleCheckbox" className="text-xs text-slate-700 cursor-pointer">
+                  <span className="font-bold block">
+                    {language === 'en' ? 'Grant Administrator Privileges' : 'Yönetici Yetkisi Ver'}
+                  </span>
+                  <span className="text-[11px] text-slate-500 block leading-tight">
+                    {language === 'en'
+                      ? 'Allows access to the Operations Director Portal and team credential management.'
+                      : 'Operasyon Yöneticisi Paneline ve çalışan hesaplarını yönetme yetkisine sahip olur.'}
+                  </span>
+                </label>
+              </div>
+
               <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsAddMemberOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
                 >
                   {t.cancelBtn}
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition-all active:scale-95"
+                  className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
                 >
                   {t.saveMemberBtn}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 6. Reset Password Modal */}
+      {resettingTech && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-slate-100 overflow-hidden">
+            <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold">
+                  <KeyRound className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm">
+                    {language === 'en' ? 'Reset Employee Password' : 'Şifre Değiştir'}
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-mono truncate max-w-[200px]">
+                    {resettingTech.name} ({resettingTech.email})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setResettingTech(null)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePasswordReset} className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {language === 'en' ? 'New Password' : 'Yeni Şifre'}
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    required
+                    value={resetPasswordInput}
+                    onChange={(e) => setResetPasswordInput(e.target.value)}
+                    placeholder="e.g. tech2026"
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-mono font-bold"
+                  />
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setResetPasswordInput(`tech${Math.floor(100 + Math.random() * 900)}`)}
+                    className="text-[10px] text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded border border-blue-200 font-medium"
+                  >
+                    🎲 {language === 'en' ? 'Generate Random' : 'Rastgele Oluştur'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setResetPasswordInput('tech123')}
+                    className="text-[10px] text-slate-600 hover:text-slate-800 bg-slate-100 px-2 py-1 rounded border border-slate-200 font-medium"
+                  >
+                    {language === 'en' ? 'Default: tech123' : 'Varsayılan: tech123'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setResettingTech(null)}
+                  className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                >
+                  {t.cancelBtn}
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+                >
+                  {language === 'en' ? 'Save Password' : 'Şifreyi Kaydet'}
                 </button>
               </div>
             </form>

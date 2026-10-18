@@ -3,11 +3,13 @@
 -- Project ID: qdjlqmtmpbhidloxaxea
 -- ==============================================================================
 
--- 1. Technicians Table
+-- 1. Technicians / Employee Accounts Table
 CREATE TABLE IF NOT EXISTS public.technicians (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
+    password TEXT DEFAULT 'tech123',
+    is_admin BOOLEAN DEFAULT false,
     phone TEXT DEFAULT '',
     role TEXT DEFAULT 'Field Technician',
     assigned_count INTEGER DEFAULT 0,

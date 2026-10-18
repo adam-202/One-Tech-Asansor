@@ -14,9 +14,9 @@ function mapDbSiteToModel(row: any, visits: VisitRecord[] = []): BuildingSite {
     category: row.category || 'private',
     latitude: Number(row.latitude),
     longitude: Number(row.longitude),
-    floors: Number(row.floors) || 1,
-    elevatorUnits: Number(row.elevator_units) || 1,
-    elevatorBrand: row.elevator_brand || 'Otis',
+    floors: row.floors !== null && row.floors !== undefined ? Number(row.floors) : null,
+    elevatorUnits: row.elevator_units !== null && row.elevator_units !== undefined ? Number(row.elevator_units) : null,
+    elevatorBrand: row.elevator_brand || 'KONE',
     elevatorNumbers: row.elevator_numbers || '',
     assignedTechnicianEmail: row.assigned_technician_email || 'adam.osama60@gmail.com',
     managerName: row.manager_name || '',
@@ -207,6 +207,8 @@ export async function fetchTechniciansFromSupabase(): Promise<Technician[] | nul
       role: row.role || 'Field Technician',
       assignedCount: Number(row.assigned_count) || 0,
       avatarColor: row.avatar_color || 'bg-blue-600',
+      password: row.password || 'tech123',
+      isAdmin: Boolean(row.is_admin || row.email === 'adam.osama60@gmail.com'),
     }));
   } catch (err) {
     console.error('Supabase technicians fetch error:', err);
@@ -228,6 +230,8 @@ export async function upsertTechnicianToSupabase(tech: Technician): Promise<bool
       role: tech.role,
       assigned_count: tech.assignedCount,
       avatar_color: tech.avatarColor,
+      password: tech.password || 'tech123',
+      is_admin: Boolean(tech.isAdmin || tech.email === 'adam.osama60@gmail.com'),
       updated_at: new Date().toISOString(),
     });
     return !error;
@@ -269,6 +273,8 @@ export async function uploadSeedDataToSupabase(
       role: t.role,
       assigned_count: t.assignedCount,
       avatar_color: t.avatarColor,
+      password: t.password || 'tech123',
+      is_admin: Boolean(t.isAdmin || t.email === 'adam.osama60@gmail.com'),
     }));
     const { error: techErr } = await supabase.from('technicians').upsert(techRows);
     if (techErr) {

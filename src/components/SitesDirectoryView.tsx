@@ -142,7 +142,7 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
         } else if (sortBy === 'neighborhood') {
           diff = a.neighborhood.localeCompare(b.neighborhood) || a.name.localeCompare(b.name);
         } else if (sortBy === 'units') {
-          diff = a.elevatorUnits - b.elevatorUnits;
+          diff = (a.elevatorUnits ?? 0) - (b.elevatorUnits ?? 0);
         } else if (sortBy === 'status') {
           const aV = a.lastVisit ? 1 : 0;
           const bV = b.lastVisit ? 1 : 0;

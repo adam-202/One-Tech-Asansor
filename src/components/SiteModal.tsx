@@ -79,8 +79,8 @@ export const SiteModal: React.FC<SiteModalProps> = ({
       setAddress(siteToEdit.address);
       setNeighborhood(siteToEdit.neighborhood);
       setCategory(siteToEdit.category);
-      setFloors(siteToEdit.floors);
-      setElevatorUnits(siteToEdit.elevatorUnits);
+      setFloors(siteToEdit.floors ?? 6);
+      setElevatorUnits(siteToEdit.elevatorUnits ?? 1);
       setElevatorBrand(siteToEdit.elevatorBrand);
       setAssignedEmail(siteToEdit.assignedTechnicianEmail);
       setManagerName(siteToEdit.managerName || '');
