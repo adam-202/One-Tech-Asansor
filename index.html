@@ -12,10 +12,32 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script type="module" crossorigin src="/One-Tech-Asansor/assets/index-b_2QxK1u.js"></script>
-    <link rel="stylesheet" crossorigin href="/One-Tech-Asansor/assets/index-BjAb3fU4.css">
+    <script type="module" crossorigin src="/One-Tech-Asansor/assets/index-DlyoPFSR.js"></script>
+    <link rel="stylesheet" crossorigin href="/One-Tech-Asansor/assets/index-D8RWRRxz.css">
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      (function() {
+        if (window.location.hostname.indexOf('github.io') !== -1) {
+          setTimeout(function() {
+            var rootEl = document.getElementById('root');
+            if (rootEl && rootEl.childElementCount === 0) {
+              console.warn('GitHub Pages root detected without compilation. Auto-mounting built production assets...');
+              var cssLink = document.createElement('link');
+              cssLink.rel = 'stylesheet';
+              cssLink.href = '/One-Tech-Asansor/assets/index-BjAb3fU4.css';
+              document.head.appendChild(cssLink);
+
+              var jsScript = document.createElement('script');
+              jsScript.type = 'module';
+              jsScript.crossOrigin = 'anonymous';
+              jsScript.src = '/One-Tech-Asansor/assets/index-b_2QxK1u.js';
+              document.body.appendChild(jsScript);
+            }
+          }, 350);
+        }
+      })();
+    </script>
   </body>
 </html>
