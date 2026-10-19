@@ -5,7 +5,7 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(({ command }) => {
   return {
-    base: command === 'build' ? './' : '/',
+    base: process.env.BASE_URL || (command === 'build' ? '/One-Tech-Asansor/' : '/'),
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {

@@ -16,7 +16,6 @@ import { EmergencyFaultModal } from './components/EmergencyFaultModal';
 import { AdminPortal } from './components/AdminPortal';
 import { SupabaseConnectModal } from './components/SupabaseConnectModal';
 import { LoginPage } from './components/LoginPage';
-import { Elevator3DExperience } from './components/Elevator3DExperience';
 import { MobileBottomNav } from './components/MobileBottomNav';
 import { CheckCircle2, RotateCcw } from 'lucide-react';
 import { Language, translations } from './utils/translations';
@@ -183,7 +182,6 @@ export default function App() {
   const [isSiteModalOpen, setIsSiteModalOpen] = useState<boolean>(false);
   const [isEmergencyFaultModalOpen, setIsEmergencyFaultModalOpen] = useState<boolean>(false);
   const [isSupabaseModalOpen, setIsSupabaseModalOpen] = useState<boolean>(false);
-  const [is3DModalOpen, setIs3DModalOpen] = useState<boolean>(false);
   const [isSupabaseConnected, setIsSupabaseConnected] = useState<boolean>(false);
   const [editingSite, setEditingSite] = useState<BuildingSite | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -544,7 +542,6 @@ export default function App() {
         isSupabaseConnected={isSupabaseConnected}
         onOpenSupabaseConnect={() => setIsSupabaseModalOpen(true)}
         isAdmin={isAdmin}
-        onOpen3D={() => setIs3DModalOpen(true)}
         onLogout={handleLogout}
       />
 
@@ -648,14 +645,6 @@ export default function App() {
         unreadAlertsCount={sites.filter((s) => s.priority === 'fault_alert').length}
       />
 
-      {/* 3D Digital Twin Elevator Telematics Modal */}
-      {is3DModalOpen && (
-        <Elevator3DExperience
-          language={language}
-          onClose={() => setIs3DModalOpen(false)}
-          isFloating={true}
-        />
-      )}
 
       {/* On-Site Inspection & Visit Modal */}
       <VisitInspectionModal

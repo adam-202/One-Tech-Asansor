@@ -9,7 +9,6 @@ import {
   AlertTriangle,
   Globe,
   Database,
-  Box,
   LogOut,
   Sparkles,
 } from 'lucide-react';
@@ -30,7 +29,6 @@ interface TopNavProps {
   isSupabaseConnected?: boolean;
   onOpenSupabaseConnect?: () => void;
   isAdmin?: boolean;
-  onOpen3D?: () => void;
   onLogout?: () => void;
 }
 
@@ -49,7 +47,6 @@ export const TopNav: React.FC<TopNavProps> = ({
   isSupabaseConnected = false,
   onOpenSupabaseConnect,
   isAdmin = false,
-  onOpen3D,
   onLogout,
 }) => {
   const [techDropdownOpen, setTechDropdownOpen] = useState(false);
@@ -139,23 +136,8 @@ export const TopNav: React.FC<TopNavProps> = ({
             )}
           </nav>
 
-          {/* Zone 3: Actions, 3D Launcher, Language Switcher & Profile */}
+          {/* Zone 3: Actions, Language Switcher & Profile */}
           <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* 3D Elevator Telematics Button */}
-            {onOpen3D && (
-              <button
-                onClick={onOpen3D}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-gradient-to-r from-blue-700/80 to-indigo-700/80 hover:from-blue-600 hover:to-indigo-600 text-white border border-blue-400/30 shadow-xs active:scale-95 transition-all"
-                title="Launch 3D Elevator Digital Twin / 3D Asansör Simülasyonu"
-              >
-                <Box className="w-3.5 h-3.5 text-sky-300 animate-spin-slow" />
-                <span className="hidden sm:inline">3D Cabin</span>
-                <span className="px-1 py-0.2 bg-sky-400/20 text-[9px] font-mono text-sky-300 rounded">
-                  3D
-                </span>
-              </button>
-            )}
-
             {/* Supabase Cloud DB Status Pill */}
             {onOpenSupabaseConnect && (
               <button
