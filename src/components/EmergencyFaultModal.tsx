@@ -133,9 +133,9 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
       }}
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-950/80 backdrop-blur-xs cursor-pointer"
     >
-      <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-rose-200 overflow-hidden my-6 cursor-default">
+      <div className="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-rose-200 dark:border-rose-900/50 overflow-hidden my-6 cursor-default">
         {/* Urgent Header */}
-        <div className="flex items-center justify-between px-6 py-4 bg-rose-950 text-white border-b border-rose-900">
+        <div className="flex items-center justify-between px-6 py-4 bg-rose-950 dark:bg-rose-950/90 text-white border-b border-rose-900">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-rose-600 flex items-center justify-center font-bold text-white shadow-xs">
               <AlertTriangle className="w-5 h-5 text-white animate-pulse" />
@@ -151,7 +151,7 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-rose-300 hover:text-white rounded-lg hover:bg-rose-900/60 transition-colors"
+            className="p-1.5 text-rose-300 hover:text-white rounded-lg hover:bg-rose-900/60 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -162,8 +162,8 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
           <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
             {/* 1. Quick Building Selector with Search */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <Building2 className="w-3.5 h-3.5 text-blue-600" />
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 <span>Select Building / Site *</span>
               </label>
 
@@ -175,14 +175,14 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
                   value={siteSearch}
                   onChange={(e) => setSiteSearch(e.target.value)}
                   placeholder="Filter 160 buildings by name or address..."
-                  className="w-full text-xs pl-9 pr-3 py-2 rounded-lg border border-slate-300 focus:border-blue-500 outline-hidden bg-slate-50 focus:bg-white"
+                  className="w-full text-xs pl-9 pr-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 focus:border-blue-500 outline-hidden bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500"
                 />
               </div>
 
               <select
                 value={selectedSiteId}
                 onChange={(e) => setSelectedSiteId(e.target.value)}
-                className="w-full text-xs p-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-hidden font-medium"
+                className="w-full text-xs p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-hidden font-medium"
                 required
               >
                 {filteredSites.slice(0, 50).map((site) => (
@@ -193,13 +193,13 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
               </select>
 
               {selectedSite && (
-                <div className="mt-2 p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs flex items-center justify-between text-slate-600">
+                <div className="mt-2 p-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs flex items-center justify-between text-slate-600 dark:text-slate-300">
                   <div className="flex items-center gap-2">
                     <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="font-semibold text-slate-800">{selectedSite.name}</span>
-                    <span className="text-slate-500">· {selectedSite.address}</span>
+                    <span className="font-semibold text-slate-800 dark:text-white">{selectedSite.name}</span>
+                    <span className="text-slate-500 dark:text-slate-400">· {selectedSite.address}</span>
                   </div>
-                  <span className="font-mono text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                  <span className="font-mono text-amber-700 dark:text-amber-300 font-semibold bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800">
                     Code: {selectedSite.accessCode}
                   </span>
                 </div>
@@ -208,33 +208,33 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
 
             {/* 2. Fault Severity Level */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
                 Fault Severity *
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setSeverity('fault')}
-                  className={`py-2.5 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
+                  className={`py-2.5 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                     severity === 'fault'
-                      ? 'border-amber-500 bg-amber-50 text-amber-900 ring-2 ring-amber-500/20'
-                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 ring-2 ring-amber-500/20'
+                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                   }`}
                 >
-                  <AlertTriangle className="w-4 h-4 text-amber-600" />
+                  <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                   <span>Fault / Attention Required</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setSeverity('emergency')}
-                  className={`py-2.5 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
+                  className={`py-2.5 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
                     severity === 'emergency'
-                      ? 'border-rose-600 bg-rose-50 text-rose-900 ring-2 ring-rose-600/20'
-                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                      ? 'border-rose-600 bg-rose-50 dark:bg-rose-950/60 text-rose-900 dark:text-rose-200 ring-2 ring-rose-600/20'
+                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                   }`}
                 >
-                  <AlertOctagon className="w-4 h-4 text-rose-600" />
+                  <AlertOctagon className="w-4 h-4 text-rose-600 dark:text-rose-400" />
                   <span>Critical Shutdown / Entrapment</span>
                 </button>
               </div>
@@ -242,8 +242,8 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
 
             {/* 3. Affected Elevator Unit */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-blue-600" />
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 <span>Affected Elevator Car / Fleet ID</span>
               </label>
               <input
@@ -251,17 +251,17 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
                 value={affectedUnit}
                 onChange={(e) => setAffectedUnit(e.target.value)}
                 placeholder="e.g. Car 1 (Passenger), Freight Lift, or All Units"
-                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-rose-500 outline-hidden text-slate-900"
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-rose-500 outline-hidden text-slate-900 dark:text-white dark:placeholder-slate-500"
               />
             </div>
 
             {/* 4. Issue Description & Quick Presets */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                   Issue Description & Symptom *
                 </label>
-                <span className="text-[11px] text-slate-400">Quick Presets</span>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">Quick Presets</span>
               </div>
 
               {/* Quick Fault Presets */}
@@ -278,7 +278,7 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
                     key={preset}
                     type="button"
                     onClick={() => handleApplyPreset(preset)}
-                    className="px-2 py-0.5 text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 rounded transition-colors"
+                    className="px-2 py-0.5 text-[10px] bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded transition-colors cursor-pointer"
                   >
                     + {preset}
                   </button>
@@ -291,14 +291,14 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
                 value={issueSummary}
                 onChange={(e) => setIssueSummary(e.target.value)}
                 placeholder="Describe the issue reported by the building manager or technician on site..."
-                className="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-hidden text-slate-900 placeholder-slate-400"
+                className="w-full text-xs p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-hidden text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
               />
             </div>
 
             {/* 5. Parts Replaced or Required */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                <Wrench className="w-3.5 h-3.5 text-amber-600" />
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <Wrench className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                 <span>Parts Replaced or Components Needed</span>
               </label>
               <input
@@ -306,21 +306,21 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
                 value={partsReplaced}
                 onChange={(e) => setPartsReplaced(e.target.value)}
                 placeholder="e.g. New door optical sensor, 2x roller guides installed, or Parts on order"
-                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-rose-500 outline-hidden text-slate-900"
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-rose-500 outline-hidden text-slate-900 dark:text-white dark:placeholder-slate-500"
               />
             </div>
 
             {/* 6. Attending Technicians on Site */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-blue-600" />
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                   <span>Responding Team ({attendingTechs.length})</span>
                 </label>
-                <span className="text-[11px] text-slate-500">Colleagues responding</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400">Colleagues responding</span>
               </div>
 
-              <div className="flex flex-wrap gap-1.5 p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="flex flex-wrap gap-1.5 p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
                 {activeTechnicians.map((tech) => {
                   const isSelected = attendingTechs.includes(tech.name);
                   return (
@@ -328,10 +328,10 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
                       key={tech.id}
                       type="button"
                       onClick={() => toggleAttendingTech(tech.name)}
-                      className={`px-2 py-1 text-xs rounded-lg font-medium transition-all flex items-center gap-1 ${
+                      className={`px-2 py-1 text-xs rounded-lg font-medium transition-all flex items-center gap-1 cursor-pointer ${
                         isSelected
                           ? 'bg-rose-600 text-white shadow-xs'
-                          : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
+                          : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
                       }`}
                     >
                       {isSelected ? <CheckCircle2 className="w-3 h-3 text-white" /> : <Plus className="w-3 h-3 text-slate-400" />}
@@ -344,17 +344,17 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
           </div>
 
           {/* Footer Actions */}
-          <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
+          <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/90 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-200/60 rounded-xl transition-colors"
+              className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 active:scale-[0.98] rounded-xl shadow-md shadow-rose-600/20 flex items-center gap-2 transition-all"
+              className="px-5 py-2.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 active:scale-[0.98] rounded-xl shadow-md shadow-rose-600/20 flex items-center gap-2 transition-all cursor-pointer"
             >
               <AlertOctagon className="w-4 h-4" />
               <span>Flag as Attention Required & Save Log</span>

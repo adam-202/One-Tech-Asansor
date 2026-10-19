@@ -221,7 +221,7 @@ export const BatchImportModal: React.FC<BatchImportModalProps> = ({
       }}
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto bg-slate-900/80 backdrop-blur-xs cursor-pointer"
     >
-      <div className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] cursor-default">
+      <div className="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col max-h-[92vh] cursor-default">
         {/* Modal Header */}
         <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-3">
@@ -260,14 +260,14 @@ export const BatchImportModal: React.FC<BatchImportModalProps> = ({
         </div>
 
         {/* Modal Navigation Tabs */}
-        <div className="px-6 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+        <div className="px-6 py-3 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab('file')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 activeTab === 'file'
                   ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
+                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700'
               }`}
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -278,7 +278,7 @@ export const BatchImportModal: React.FC<BatchImportModalProps> = ({
               className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 activeTab === 'clipboard'
                   ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
+                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700'
               }`}
             >
               <Clipboard className="w-3.5 h-3.5" />
@@ -289,7 +289,7 @@ export const BatchImportModal: React.FC<BatchImportModalProps> = ({
               className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
                 activeTab === 'whatsapp'
                   ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
+                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700'
               }`}
             >
               <MessageSquare className="w-3.5 h-3.5 text-emerald-500" />
@@ -297,7 +297,7 @@ export const BatchImportModal: React.FC<BatchImportModalProps> = ({
             </button>
           </div>
 
-          <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer select-none">
+          <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={updateExisting}
@@ -510,8 +510,8 @@ export const BatchImportModal: React.FC<BatchImportModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
-          <div className="text-xs text-slate-500">
+        <div className="px-6 py-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+          <div className="text-xs text-slate-500 dark:text-slate-400">
             {parsedRows.length > 0 ? (
               <span>
                 Ready to commit <strong>{selectedIndices.size}</strong> building sites to your directory.
@@ -525,7 +525,7 @@ export const BatchImportModal: React.FC<BatchImportModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 rounded-xl transition-colors"
+              className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 rounded-xl transition-colors cursor-pointer"
             >
               Cancel
             </button>

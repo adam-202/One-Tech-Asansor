@@ -419,8 +419,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
       {/* 2. Success Toast */}
       {successToast && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-2 animate-fadeIn shadow-sm">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+        <div className="p-3 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 rounded-xl text-xs font-semibold flex items-center gap-2 animate-fadeIn shadow-sm">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <span>{successToast}</span>
         </div>
       )}
@@ -429,15 +429,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-blue-600" />
-            <h2 className="text-sm font-bold text-slate-900">{t.teamManagementTitle}</h2>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-mono font-semibold">
+            <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">{t.teamManagementTitle}</h2>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-800 dark:text-blue-300 font-mono font-semibold">
               {technicians.length}
             </span>
           </div>
           <button
             onClick={() => setIsAddMemberOpen(true)}
-            className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
+            className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 transition-colors cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>{t.addMemberBtn}</span>
@@ -455,7 +455,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             return (
               <div
                 key={tech.id}
-                className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-3 relative group hover:border-blue-300 transition-all"
+                className="bg-white dark:bg-slate-900/90 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3 relative group hover:border-blue-300 dark:hover:border-blue-500/60 transition-all"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2.5">
@@ -464,15 +464,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <h3 className="font-bold text-sm text-slate-900">{tech.name}</h3>
+                        <h3 className="font-bold text-sm text-slate-900 dark:text-white">{tech.name}</h3>
                         {isDirector && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-100 text-blue-700 font-bold border border-blue-200">
+                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-800">
                             Admin
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-500 font-medium">{tech.role}</p>
-                      <p className="text-[10px] text-slate-400 font-mono">{tech.email}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{tech.role}</p>
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{tech.email}</p>
                     </div>
                   </div>
 
@@ -480,7 +480,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleOpenEditMember(tech)}
-                      className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                      className="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                       title={language === 'en' ? 'Edit Member Profile' : 'Profili Düzenle'}
                     >
                       <Pencil className="w-4 h-4" />
@@ -488,13 +488,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     {!isDirector ? (
                       <button
                         onClick={() => handleDeleteMember(tech)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
                         title={t.removeMemberBtn}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     ) : (
-                      <div className="p-1.5 text-blue-600" title={language === 'en' ? 'Operations Director (Protected)' : 'Operasyon Direktörü'}>
+                      <div className="p-1.5 text-blue-600 dark:text-blue-400" title={language === 'en' ? 'Operations Director (Protected)' : 'Operasyon Direktörü'}>
                         <Shield className="w-4 h-4" />
                       </div>
                     )}
@@ -502,13 +502,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </div>
 
                 {/* Account Password & Credentials Pill */}
-                <div className="bg-slate-50 rounded-xl p-2.5 border border-slate-200/80 flex items-center justify-between gap-2 text-xs">
+                <div className="bg-slate-50 dark:bg-slate-800/80 rounded-xl p-2.5 border border-slate-200/80 dark:border-slate-700/80 flex items-center justify-between gap-2 text-xs">
                   <div className="flex items-center gap-1.5 overflow-hidden">
                     <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span className="text-[11px] text-slate-500 font-medium">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                       {language === 'en' ? 'Pass:' : 'Şifre:'}
                     </span>
-                    <span className="font-mono text-[11px] text-slate-800 font-bold tracking-wider">
+                    <span className="font-mono text-[11px] text-slate-800 dark:text-slate-200 font-bold tracking-wider">
                       {revealedPasswords[tech.id] ? currentPass : '••••••••'}
                     </span>
                     <button
@@ -519,7 +519,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                           [tech.id]: !prev[tech.id],
                         }))
                       }
-                      className="text-slate-400 hover:text-slate-700 p-0.5 cursor-pointer"
+                      className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-0.5 cursor-pointer"
                       title="Reveal password"
                     >
                       {revealedPasswords[tech.id] ? (
@@ -532,19 +532,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleOpenResetPassword(tech)}
-                    className="px-2 py-1 text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md border border-blue-200 transition-colors cursor-pointer"
+                    className="px-2 py-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/60 rounded-md border border-blue-200 dark:border-blue-800 transition-colors cursor-pointer"
                   >
                     {language === 'en' ? 'Change' : 'Şifre Değiştir'}
                   </button>
                 </div>
 
                 {/* Progress Bar & Site Count */}
-                <div className="pt-1 border-t border-slate-100">
-                  <div className="flex justify-between text-[11px] font-medium text-slate-600 mb-1">
+                <div className="pt-1 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex justify-between text-[11px] font-medium text-slate-600 dark:text-slate-400 mb-1">
                     <span>{t.maintenanceProgress}</span>
                     <span className="font-mono">{visitedCount}/{techSites.length} {t.buildingsCount} ({pct}%)</span>
                   </div>
-                  <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-blue-600 rounded-full transition-all duration-500"
                       style={{ width: `${pct}%` }}
@@ -553,25 +553,25 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </div>
 
                 {/* Quick Action Bar: Assign Buildings & Edit Profile */}
-                <div className="pt-2 flex items-center gap-2 border-t border-slate-100">
+                <div className="pt-2 flex items-center gap-2 border-t border-slate-100 dark:border-slate-800">
                   <button
                     type="button"
                     onClick={() => handleOpenAssignSites(tech)}
-                    className="flex-1 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/80 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    className="flex-1 px-3 py-1.5 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    <Building2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
                     <span>{language === 'en' ? 'Assign Buildings' : 'Bina Ata / Düzenle'}</span>
-                    <span className="ml-0.5 px-1.5 py-0.2 bg-blue-200 text-blue-900 rounded-md text-[10px] font-mono">
+                    <span className="ml-0.5 px-1.5 py-0.2 bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100 rounded-md text-[10px] font-mono">
                       {techSites.length}
                     </span>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleOpenEditMember(tech)}
-                    className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                    className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                     title={language === 'en' ? 'Edit Profile' : 'Profili Düzenle'}
                   >
-                    <Pencil className="w-3.5 h-3.5 text-slate-500" />
+                    <Pencil className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                     <span className="hidden sm:inline">{language === 'en' ? 'Edit' : 'Düzenle'}</span>
                   </button>
                 </div>
@@ -581,14 +581,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         </div>
 
         {technicians.length <= 1 && (
-          <div className="p-4 bg-blue-50/70 border border-blue-200 rounded-xl text-xs text-blue-800 flex items-center justify-between">
+          <div className="p-4 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-xl text-xs text-blue-800 dark:text-blue-300 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-blue-600 shrink-0" />
+              <Users className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
               <span>{t.noExtraMembers}</span>
             </div>
             <button
               onClick={() => setIsAddMemberOpen(true)}
-              className="px-3 py-1 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors cursor-pointer"
             >
               {t.addMemberBtn}
             </button>
@@ -597,24 +597,24 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       </div>
 
       {/* 4. Batch Assignment Toolbar */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs space-y-4">
+      <div className="bg-white dark:bg-slate-900/90 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-base font-bold text-slate-900">{t.batchReassignTitle}</h2>
-            <span className="text-xs text-slate-500 font-mono">({filteredSites.length} {t.buildingsCount})</span>
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">{t.batchReassignTitle}</h2>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">({filteredSites.length} {t.buildingsCount})</span>
           </div>
 
           {/* Mass Reassign Action */}
           {selectedSiteIds.length > 0 && (
-            <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 p-1.5 rounded-xl text-xs">
-              <span className="font-semibold text-blue-900 px-2">
+            <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 p-1.5 rounded-xl text-xs">
+              <span className="font-semibold text-blue-900 dark:text-blue-200 px-2">
                 {selectedSiteIds.length} {t.selectedCount}
               </span>
-              <span className="text-slate-500 font-medium">{t.reassignToLabel}</span>
+              <span className="text-slate-500 dark:text-slate-400 font-medium">{t.reassignToLabel}</span>
               <select
                 value={reassignToEmail}
                 onChange={(e) => setReassignToEmail(e.target.value)}
-                className="p-1.5 rounded-lg border border-blue-300 bg-white text-slate-800 font-medium text-xs outline-hidden"
+                className="p-1.5 rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white font-medium text-xs outline-hidden"
               >
                 {technicians.map((tech) => (
                   <option key={tech.id} value={tech.email}>
@@ -624,7 +624,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </select>
               <button
                 onClick={handleApplyReassignment}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors cursor-pointer"
               >
                 {t.applyReassignment}
               </button>
@@ -641,7 +641,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t.searchPlaceholder}
-              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white dark:placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -649,7 +649,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <select
               value={selectedTechFilter}
               onChange={(e) => setSelectedTechFilter(e.target.value)}
-              className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">{t.allTechPool}</option>
               {technicians.map((tech) => (
@@ -663,7 +663,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           <div className="flex items-center justify-end gap-2">
             <button
               onClick={handleSelectAll}
-              className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors"
+              className="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
             >
               {selectedSiteIds.length === filteredSites.length ? t.clearSelection : t.selectAll}
             </button>
@@ -671,9 +671,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         </div>
 
         {/* Buildings Table */}
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
-          <table className="min-w-full divide-y divide-slate-200 text-xs">
-            <thead className="bg-slate-50 text-slate-600 font-semibold">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-xs">
+            <thead className="bg-slate-50 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 font-semibold">
               <tr>
                 <th className="w-10 px-3 py-3 text-center">
                   <input
@@ -691,7 +691,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 <th className="px-3 py-3 text-center">{t.tableColActions}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 bg-white dark:bg-slate-900/60">
               {filteredSites.map((site) => {
                 const isSelected = selectedSiteIds.includes(site.id);
                 const assignedTech = technicians.find((tech) => tech.email === site.assignedTechnicianEmail);
@@ -699,7 +699,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 return (
                   <tr
                     key={site.id}
-                    className={`hover:bg-slate-50/80 transition-colors ${isSelected ? 'bg-blue-50/40' : ''}`}
+                    className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors ${isSelected ? 'bg-blue-50/40 dark:bg-blue-950/40' : ''}`}
                   >
                     <td className="px-3 py-3 text-center">
                       <input
@@ -709,39 +709,39 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                       />
                     </td>
-                    <td className="px-3 py-3 font-medium text-slate-900">
+                    <td className="px-3 py-3 font-medium text-slate-900 dark:text-white">
                       <div className="font-bold">{site.name}</div>
-                      <div className="text-[11px] text-slate-500 truncate max-w-xs">{site.address}</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-xs">{site.address}</div>
                     </td>
-                    <td className="px-3 py-3 text-slate-600 font-medium">
+                    <td className="px-3 py-3 text-slate-600 dark:text-slate-300 font-medium">
                       {site.neighborhood}
                     </td>
-                    <td className="px-3 py-3 text-slate-600">
-                      <span className="font-semibold text-slate-800">{site.elevatorBrand}</span> ({site.elevatorUnits} {t.unitsCount}, {site.floors} {t.floorsCount})
+                    <td className="px-3 py-3 text-slate-600 dark:text-slate-300">
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">{site.elevatorBrand}</span> ({site.elevatorUnits} {t.unitsCount}, {site.floors} {t.floorsCount})
                     </td>
                     <td className="px-3 py-3">
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium text-[11px]">
-                        <UserCheck className="w-3 h-3 text-blue-600" />
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-[11px]">
+                        <UserCheck className="w-3 h-3 text-blue-600 dark:text-blue-400" />
                         {assignedTech?.name || site.assignedTechnicianEmail.split('@')[0]}
                       </span>
                     </td>
                     <td className="px-3 py-3 font-mono text-[11px]">
                       {site.accessCode ? (
-                        <span className="px-1.5 py-0.5 bg-amber-50 text-amber-800 rounded border border-amber-200 font-bold">
+                        <span className="px-1.5 py-0.5 bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 rounded border border-amber-200 dark:border-amber-800/80 font-bold">
                           {site.accessCode}
                         </span>
                       ) : (
-                        <span className="text-slate-400">-</span>
+                        <span className="text-slate-400 dark:text-slate-500">-</span>
                       )}
                     </td>
                     <td className="px-3 py-3 text-center">
                       <div className="flex items-center justify-center gap-1.5">
                         <button
                           onClick={() => handleTogglePriority(site)}
-                          className={`px-2 py-1 rounded text-[10px] font-bold uppercase transition-colors ${
+                          className={`px-2 py-1 rounded text-[10px] font-bold uppercase transition-colors cursor-pointer ${
                             site.priority === 'fault_alert'
-                              ? 'bg-rose-100 text-rose-700 hover:bg-rose-200'
-                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              ? 'bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 hover:bg-rose-200 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                           }`}
                           title="Toggle Fault / Priority Alert"
                         >
@@ -749,7 +749,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                         </button>
                         <button
                           onClick={() => onDeleteSite(site.id)}
-                          className="p-1 text-slate-400 hover:text-rose-600 transition-colors"
+                          className="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
                           title={t.deleteBtn}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -766,9 +766,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
       {/* 5. Add Member Modal */}
       {isAddMemberOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden">
-            <div className="bg-slate-900 text-white p-5 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+            <div className="bg-slate-900 dark:bg-slate-950 text-white p-5 flex items-center justify-between border-b border-slate-800">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold">
                   <User className="w-4 h-4 text-white" />
@@ -780,7 +780,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </div>
               <button
                 onClick={() => setIsAddMemberOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -788,7 +788,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <form onSubmit={handleSaveNewMember} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {t.memberNameLabel} *
                 </label>
                 <div className="relative">
@@ -799,13 +799,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     value={newMemberName}
                     onChange={(e) => setNewMemberName(e.target.value)}
                     placeholder={t.memberNamePlaceholder}
-                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-medium"
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-medium"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {t.memberEmailLabel} *
                 </label>
                 <div className="relative">
@@ -816,13 +816,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     value={newMemberEmail}
                     onChange={(e) => setNewMemberEmail(e.target.value)}
                     placeholder={t.memberEmailPlaceholder}
-                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-medium"
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-medium"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {language === 'en' ? 'Login Password *' : 'Giriş Şifresi *'}
                 </label>
                 <div className="relative flex items-center">
@@ -833,26 +833,26 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     value={newMemberPassword}
                     onChange={(e) => setNewMemberPassword(e.target.value)}
                     placeholder="e.g. tech123"
-                    className="w-full pl-9 pr-20 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-mono font-medium"
+                    className="w-full pl-9 pr-20 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-mono font-medium"
                   />
                   <div className="absolute right-2 flex items-center gap-1">
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer"
                     >
                       {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                     <button
                       type="button"
                       onClick={() => setNewMemberPassword(`tech${Math.floor(100 + Math.random() * 900)}`)}
-                      className="text-[10px] text-blue-600 hover:text-blue-800 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 font-medium"
+                      className="text-[10px] text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-800 font-medium cursor-pointer"
                     >
                       {language === 'en' ? 'Gen' : 'Oto'}
                     </button>
                   </div>
                 </div>
-                <p className="text-[10px] text-slate-400 mt-0.5">
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
                   {language === 'en'
                     ? 'Default is tech123. Employee will use this password to sign in.'
                     : 'Varsayılan tech123. Çalışan bu şifre ile giriş yapacaktır.'}
@@ -860,7 +860,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {t.memberRoleLabel}
                 </label>
                 <div className="relative">
@@ -870,13 +870,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     value={newMemberRole}
                     onChange={(e) => setNewMemberRole(e.target.value)}
                     placeholder={t.memberRolePlaceholder}
-                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-medium"
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-medium"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {t.memberPhoneLabel}
                 </label>
                 <div className="relative">
@@ -886,25 +886,25 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     value={newMemberPhone}
                     onChange={(e) => setNewMemberPhone(e.target.value)}
                     placeholder={t.memberPhonePlaceholder}
-                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-medium"
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-medium"
                   />
                 </div>
               </div>
 
               {/* Admin Access Checkbox */}
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-start gap-2.5">
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 flex items-start gap-2.5">
                 <input
                   type="checkbox"
                   id="adminRoleCheckbox"
                   checked={newMemberIsAdmin}
                   onChange={(e) => setNewMemberIsAdmin(e.target.checked)}
-                  className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  className="mt-0.5 rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500 cursor-pointer"
                 />
-                <label htmlFor="adminRoleCheckbox" className="text-xs text-slate-700 cursor-pointer">
-                  <span className="font-bold block">
+                <label htmlFor="adminRoleCheckbox" className="text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                  <span className="font-bold block text-slate-900 dark:text-white">
                     {language === 'en' ? 'Grant Administrator Privileges' : 'Yönetici Yetkisi Ver'}
                   </span>
-                  <span className="text-[11px] text-slate-500 block leading-tight">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block leading-tight">
                     {language === 'en'
                       ? 'Allows access to the Operations Director Portal and team credential management.'
                       : 'Operasyon Yöneticisi Paneline ve çalışan hesaplarını yönetme yetkisine sahip olur.'}
@@ -912,11 +912,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </label>
               </div>
 
-              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsAddMemberOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
                 >
                   {t.cancelBtn}
                 </button>
@@ -933,11 +933,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
       )}
 
       {/* 6. Reset Password Modal */}
-      {/* 5. Reset Password Modal */}
       {resettingTech && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-slate-100 overflow-hidden">
-            <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-sm w-full shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+            <div className="bg-slate-900 dark:bg-slate-950 text-white p-4 flex items-center justify-between border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold">
                   <KeyRound className="w-4 h-4 text-white" />
@@ -961,7 +960,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <form onSubmit={handleSavePasswordReset} className="p-5 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {language === 'en' ? 'New Password' : 'Yeni Şifre'}
                 </label>
                 <div className="relative">
@@ -972,32 +971,32 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     value={resetPasswordInput}
                     onChange={(e) => setResetPasswordInput(e.target.value)}
                     placeholder="e.g. tech2026"
-                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-mono font-bold"
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-mono font-bold"
                   />
                 </div>
                 <div className="flex items-center gap-2 mt-2">
                   <button
                     type="button"
                     onClick={() => setResetPasswordInput(`tech${Math.floor(100 + Math.random() * 900)}`)}
-                    className="text-[10px] text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded border border-blue-200 font-medium"
+                    className="text-[10px] text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-1 rounded border border-blue-200 dark:border-blue-800 font-medium cursor-pointer"
                   >
                     🎲 {language === 'en' ? 'Generate Random' : 'Rastgele Oluştur'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setResetPasswordInput('tech123')}
-                    className="text-[10px] text-slate-600 hover:text-slate-800 bg-slate-100 px-2 py-1 rounded border border-slate-200 font-medium"
+                    className="text-[10px] text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded border border-slate-200 dark:border-slate-700 font-medium cursor-pointer"
                   >
                     {language === 'en' ? 'Default: tech123' : 'Varsayılan: tech123'}
                   </button>
                 </div>
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setResettingTech(null)}
-                  className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                  className="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
                 >
                   {t.cancelBtn}
                 </button>
@@ -1013,11 +1012,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         </div>
       )}
 
-      {/* 6. Edit Member Profile Modal */}
+      {/* 7. Edit Member Profile Modal */}
       {editingTech && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden">
-            <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+            <div className="bg-slate-900 dark:bg-slate-950 text-white p-4 flex items-center justify-between border-b border-slate-800">
               <div className="flex items-center gap-2.5">
                 <div className={`w-8 h-8 rounded-xl ${editMemberColor} text-white font-bold text-xs flex items-center justify-center shadow-xs`}>
                   {editMemberName ? editMemberName[0] : 'U'}
@@ -1041,7 +1040,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
             <form onSubmit={handleSaveEditMember} className="p-5 space-y-3.5">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {t.memberNameLabel}
                 </label>
                 <div className="relative">
@@ -1051,13 +1050,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     required
                     value={editMemberName}
                     onChange={(e) => setEditMemberName(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-semibold text-slate-900"
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-semibold"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {t.memberRoleLabel}
                 </label>
                 <div className="relative">
@@ -1067,13 +1066,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     required
                     value={editMemberRole}
                     onChange={(e) => setEditMemberRole(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 text-slate-900"
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {t.memberEmailLabel}
                 </label>
                 <div className="relative">
@@ -1083,13 +1082,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     required
                     value={editMemberEmail}
                     onChange={(e) => setEditMemberEmail(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-mono text-slate-900"
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {t.memberPhoneLabel}
                 </label>
                 <div className="relative">
@@ -1098,14 +1097,14 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     type="text"
                     value={editMemberPhone}
                     onChange={(e) => setEditMemberPhone(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-mono text-slate-900"
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
               {/* Avatar Color Picker */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   {language === 'en' ? 'Badge Color' : 'Rozet Rengi'}
                 </label>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -1123,8 +1122,8 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       key={color}
                       type="button"
                       onClick={() => setEditMemberColor(color)}
-                      className={`w-7 h-7 rounded-lg ${color} transition-transform ${
-                        editMemberColor === color ? 'ring-2 ring-blue-500 ring-offset-2 scale-110' : 'opacity-80 hover:opacity-100'
+                      className={`w-7 h-7 rounded-lg ${color} transition-transform cursor-pointer ${
+                        editMemberColor === color ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900 scale-110' : 'opacity-80 hover:opacity-100'
                       }`}
                     />
                   ))}
@@ -1133,18 +1132,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
               {/* Admin Privileges Toggle */}
               <div className="pt-2">
-                <label className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:bg-slate-100/70 transition-colors">
+                <label className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-100/70 dark:hover:bg-slate-800 transition-colors">
                   <input
                     type="checkbox"
                     checked={editMemberIsAdmin}
                     onChange={(e) => setEditMemberIsAdmin(e.target.checked)}
-                    className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    className="mt-0.5 rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500"
                   />
                   <div>
-                    <span className="block text-xs font-bold text-slate-900">
+                    <span className="block text-xs font-bold text-slate-900 dark:text-white">
                       {language === 'en' ? 'Administrator Privileges' : 'Yönetici Yetkisi (Admin Portalı ve Şifre Yönetimi)'}
                     </span>
-                    <span className="block text-[11px] text-slate-500">
+                    <span className="block text-[11px] text-slate-500 dark:text-slate-400">
                       {language === 'en'
                         ? 'Grants access to admin portal, member passwords and master data export.'
                         : 'Bu üyeye tam operasyon yetkisi, şifre görme ve bina dağıtım kontrolü verir.'}
@@ -1153,11 +1152,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 </label>
               </div>
 
-              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+              <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setEditingTech(null)}
-                  className="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                  className="px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
                 >
                   {t.cancelBtn}
                 </button>
@@ -1173,12 +1172,12 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         </div>
       )}
 
-      {/* 7. Assign Buildings to Technician Modal */}
+      {/* 8. Assign Buildings to Technician Modal */}
       {assigningTech && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
             {/* Header */}
-            <div className="bg-slate-900 text-white p-4 sm:p-5 flex items-center justify-between shrink-0">
+            <div className="bg-slate-900 dark:bg-slate-950 text-white p-4 sm:p-5 flex items-center justify-between shrink-0 border-b border-slate-800">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-2xl ${assigningTech.avatarColor || 'bg-blue-600'} flex items-center justify-center font-bold text-white text-base shadow-md`}>
                   {assigningTech.name[0]}
@@ -1206,7 +1205,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </div>
 
             {/* Filter & Search Bar */}
-            <div className="p-3 sm:p-4 bg-slate-50 border-b border-slate-200/80 space-y-2.5 shrink-0">
+            <div className="p-3 sm:p-4 bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-700/80 space-y-2.5 shrink-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="relative">
                   <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
@@ -1215,7 +1214,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                     value={assignModalSearch}
                     onChange={(e) => setAssignModalSearch(e.target.value)}
                     placeholder={language === 'en' ? 'Search buildings or brand...' : 'Bina adı veya asansör markası ara...'}
-                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div className="relative">
@@ -1223,7 +1222,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                   <select
                     value={assignModalNeighborhood}
                     onChange={(e) => setAssignModalNeighborhood(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-white text-slate-700 font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="all">{language === 'en' ? 'All Neighborhoods' : 'Tüm Bölgeler'}</option>
                     {Array.from(new Set(sites.map((s) => s.neighborhood))).filter(Boolean).map((n) => (
@@ -1259,10 +1258,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       <button
                         type="button"
                         onClick={() => setAssignModalFilterMode('all')}
-                        className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+                        className={`px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
                           assignModalFilterMode === 'all'
                             ? 'bg-blue-600 text-white font-bold'
-                            : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                         }`}
                       >
                         {language === 'en' ? 'All' : 'Tümü'} ({sites.length})
@@ -1270,10 +1269,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       <button
                         type="button"
                         onClick={() => setAssignModalFilterMode('assigned')}
-                        className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+                        className={`px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
                           assignModalFilterMode === 'assigned'
                             ? 'bg-emerald-600 text-white font-bold'
-                            : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                         }`}
                       >
                         {language === 'en' ? 'Assigned' : 'Bu Teknisyende'} ({assignedSiteIdsForModal.length})
@@ -1281,10 +1280,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       <button
                         type="button"
                         onClick={() => setAssignModalFilterMode('other')}
-                        className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
+                        className={`px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
                           assignModalFilterMode === 'other'
                             ? 'bg-amber-600 text-white font-bold'
-                            : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
                         }`}
                       >
                         {language === 'en' ? 'Unassigned / Others' : 'Diğerleri'} ({sites.length - assignedSiteIdsForModal.length})
@@ -1295,15 +1294,15 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       <button
                         type="button"
                         onClick={() => handleSelectAllVisibleSites(visibleIds)}
-                        className="text-[11px] font-bold text-blue-600 hover:text-blue-800 transition-colors"
+                        className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer"
                       >
                         {language === 'en' ? 'Select Filtered' : 'Görünenleri Seç'}
                       </button>
-                      <span className="text-slate-300">|</span>
+                      <span className="text-slate-300 dark:text-slate-700">|</span>
                       <button
                         type="button"
                         onClick={() => handleDeselectAllVisibleSites(visibleIds)}
-                        className="text-[11px] font-bold text-slate-500 hover:text-rose-600 transition-colors"
+                        className="text-[11px] font-bold text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
                       >
                         {language === 'en' ? 'Clear Filtered' : 'Görünenleri Kaldır'}
                       </button>
@@ -1314,7 +1313,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </div>
 
             {/* Buildings Scroll List */}
-            <div className="flex-1 overflow-y-auto p-3 sm:p-4 divide-y divide-slate-100">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 divide-y divide-slate-100 dark:divide-slate-800">
               {(() => {
                 const visibleSites = sites.filter((s) => {
                   if (assignModalNeighborhood !== 'all' && s.neighborhood !== assignModalNeighborhood) return false;
@@ -1335,7 +1334,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
                 if (visibleSites.length === 0) {
                   return (
-                    <div className="py-12 text-center text-slate-400 text-xs">
+                    <div className="py-12 text-center text-slate-400 dark:text-slate-500 text-xs">
                       {language === 'en' ? 'No buildings match your filter.' : 'Filtreye uygun bina bulunamadı.'}
                     </div>
                   );
@@ -1352,42 +1351,42 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       onClick={() => handleToggleSiteInAssignModal(site.id)}
                       className={`p-3 rounded-2xl flex items-center justify-between gap-3 cursor-pointer transition-all ${
                         isChecked
-                          ? 'bg-blue-50/80 hover:bg-blue-100/70 border border-blue-200'
-                          : 'hover:bg-slate-50 border border-transparent'
+                          ? 'bg-blue-50/80 dark:bg-blue-950/60 hover:bg-blue-100/70 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-800'
+                          : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent'
                       }`}
                     >
                       <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="shrink-0 text-blue-600">
+                        <div className="shrink-0 text-blue-600 dark:text-blue-400">
                           {isChecked ? (
-                            <CheckSquare className="w-5 h-5 text-blue-600" />
+                            <CheckSquare className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                           ) : (
-                            <Square className="w-5 h-5 text-slate-300" />
+                            <Square className="w-5 h-5 text-slate-300 dark:text-slate-600" />
                           )}
                         </div>
                         <div className="overflow-hidden">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-xs sm:text-sm text-slate-900 truncate">
+                            <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
                               {site.name}
                             </h4>
-                            <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700">
+                            <span className="shrink-0 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                               {site.elevatorBrand || 'KONE'}
                             </span>
                           </div>
-                          <p className="text-[11px] text-slate-500 truncate">{site.neighborhood} • {site.address}</p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{site.neighborhood} • {site.address}</p>
                         </div>
                       </div>
 
                       <div className="shrink-0 text-right">
                         {isChecked ? (
-                          <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                             {language === 'en' ? 'Assigned' : 'Atandı'}
                           </span>
                         ) : isAssignedToOther ? (
-                          <span className="px-2 py-1 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                          <span className="px-2 py-1 rounded-full text-[10px] font-medium bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80">
                             {language === 'en' ? `Currently: ${currentOwner?.name || 'Other'}` : `Şu an: ${currentOwner?.name || 'Diğer'}`}
                           </span>
                         ) : (
-                          <span className="px-2 py-1 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600">
+                          <span className="px-2 py-1 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                             {language === 'en' ? 'Shared Pool' : 'Ortak Havuz'}
                           </span>
                         )}
@@ -1399,16 +1398,16 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             </div>
 
             {/* Footer */}
-            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
-              <div className="text-xs text-slate-600">
-                <span className="font-bold text-slate-900">{assignedSiteIdsForModal.length}</span> {language === 'en' ? 'buildings selected for' : 'bina seçildi:'}{' '}
-                <span className="font-semibold text-blue-700">{assigningTech.name}</span>
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/90 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 shrink-0">
+              <div className="text-xs text-slate-600 dark:text-slate-400">
+                <span className="font-bold text-slate-900 dark:text-white">{assignedSiteIdsForModal.length}</span> {language === 'en' ? 'buildings selected for' : 'bina seçildi:'}{' '}
+                <span className="font-semibold text-blue-700 dark:text-blue-300">{assigningTech.name}</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setAssigningTech(null)}
-                  className="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+                  className="px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer"
                 >
                   {t.cancelBtn}
                 </button>

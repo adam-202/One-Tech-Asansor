@@ -26,9 +26,9 @@ interface SiteModalProps {
 }
 
 const ELEVATOR_BRANDS = [
+  'KONE',
   'Otis',
   'Schindler',
-  'KONE',
   'Thyssenkrupp',
   'Mitsubishi',
   'Fujitec',
@@ -143,16 +143,16 @@ export const SiteModal: React.FC<SiteModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-xs animate-fadeIn">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="bg-slate-900 text-white p-5 flex items-center justify-between shrink-0">
+        <div className="bg-slate-900 dark:bg-slate-950 text-white p-5 flex items-center justify-between shrink-0 border-b border-slate-800">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center font-bold">
               <Building2 className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-base font-bold">
+              <h2 className="text-base font-bold text-white">
                 {siteToEdit ? t.siteModalEditTitle : t.siteModalAddTitle}
               </h2>
               <p className="text-xs text-slate-400">
@@ -162,7 +162,7 @@ export const SiteModal: React.FC<SiteModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -172,7 +172,7 @@ export const SiteModal: React.FC<SiteModalProps> = ({
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {t.siteNameLabel} *
               </label>
               <input
@@ -181,18 +181,18 @@ export const SiteModal: React.FC<SiteModalProps> = ({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="örn. Adel Palace veya Göktürk Ay Tek"
-                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-900 outline-hidden font-medium"
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden font-medium"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {t.neighborhoodLabel}
               </label>
               <select
                 value={neighborhood}
                 onChange={(e) => setNeighborhood(e.target.value)}
-                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-900 outline-hidden bg-white"
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden"
               >
                 {ISTANBUL_DISTRICTS.map((d) => (
                   <option key={d} value={d}>{d}</option>
@@ -202,7 +202,7 @@ export const SiteModal: React.FC<SiteModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               {t.addressLabel}
             </label>
             <input
@@ -210,19 +210,19 @@ export const SiteModal: React.FC<SiteModalProps> = ({
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="Açık adres veya semt detayı..."
-              className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-900 outline-hidden"
+              className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {t.elevatorBrandLabel}
               </label>
               <select
                 value={elevatorBrand}
                 onChange={(e) => setElevatorBrand(e.target.value)}
-                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-900 outline-hidden bg-white"
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden"
               >
                 {ELEVATOR_BRANDS.map((b) => (
                   <option key={b} value={b}>{b}</option>
@@ -231,7 +231,7 @@ export const SiteModal: React.FC<SiteModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {t.elevatorUnitsLabel}
               </label>
               <input
@@ -240,12 +240,12 @@ export const SiteModal: React.FC<SiteModalProps> = ({
                 max={20}
                 value={elevatorUnits}
                 onChange={(e) => setElevatorUnits(Number(e.target.value))}
-                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-900 outline-hidden"
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {t.floorsLabel}
               </label>
               <input
@@ -254,14 +254,14 @@ export const SiteModal: React.FC<SiteModalProps> = ({
                 max={100}
                 value={floors}
                 onChange={(e) => setFloors(Number(e.target.value))}
-                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-900 outline-hidden"
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {language === 'en' ? 'Manager Name (Optional)' : 'Yönetici Adı (Opsiyonel)'}
               </label>
               <input
@@ -269,12 +269,12 @@ export const SiteModal: React.FC<SiteModalProps> = ({
                 value={managerName}
                 onChange={(e) => setManagerName(e.target.value)}
                 placeholder={language === 'en' ? 'Leave empty if unknown' : 'Bilinmiyorsa boş bırakın'}
-                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-900 outline-hidden"
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {language === 'en' ? 'Manager Phone (Optional)' : 'Yönetici Telefonu (Opsiyonel)'}
               </label>
               <input
@@ -282,12 +282,12 @@ export const SiteModal: React.FC<SiteModalProps> = ({
                 value={managerPhone}
                 onChange={(e) => setManagerPhone(e.target.value)}
                 placeholder="+90 (532)..."
-                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-900 outline-hidden font-mono"
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden font-mono"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 {t.doorCodeLabel} (Optional)
               </label>
               <input
@@ -295,19 +295,19 @@ export const SiteModal: React.FC<SiteModalProps> = ({
                 value={accessCode}
                 onChange={(e) => setAccessCode(e.target.value)}
                 placeholder="**3437, **1803..."
-                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-900 outline-hidden font-mono"
+                className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden font-mono"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               {t.tableColAssigned}
             </label>
             <select
               value={assignedEmail}
               onChange={(e) => setAssignedEmail(e.target.value)}
-              className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-900 outline-hidden bg-white"
+              className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden"
             >
               {technicians.map((tech) => (
                 <option key={tech.id} value={tech.email}>
@@ -318,7 +318,7 @@ export const SiteModal: React.FC<SiteModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
               {t.googleMapsUrlLabel}
             </label>
             <input
@@ -326,21 +326,21 @@ export const SiteModal: React.FC<SiteModalProps> = ({
               value={googleMapsUrl}
               onChange={(e) => setGoogleMapsUrl(e.target.value)}
               placeholder="https://maps.google.com/..."
-              className="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-slate-900 outline-hidden font-mono"
+              className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden font-mono"
             />
           </div>
 
-          <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
+          <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors"
+              className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
             >
               {t.cancelBtn}
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition-all active:scale-95"
+              className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
             >
               {t.saveSiteBtn}
             </button>

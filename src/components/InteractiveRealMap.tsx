@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { RouteStop, BuildingSite } from '../types';
+import { Language, translations } from '../utils/translations';
 import { buildGoogleMapsRouteUrl } from '../utils/geo';
 import L from 'leaflet';
 import {
@@ -31,6 +32,7 @@ interface InteractiveRealMapProps {
   userGps?: { latitude: number; longitude: number } | null;
   onRequestLocation?: () => void;
   isLocating?: boolean;
+  language?: Language;
 }
 
 export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
@@ -46,6 +48,7 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
   userGps,
   onRequestLocation,
   isLocating = false,
+  language = 'en',
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -53,7 +56,8 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
   const routeLayerRef = useRef<L.Polyline | null>(null);
   const tileLayerRef = useRef<L.TileLayer | null>(null);
 
-  const [mapStyle, setMapStyle] = useState<'streets' | 'satellite' | 'dark'>('streets');
+  const isInitiallyDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+  const [mapStyle, setMapStyle] = useState<'streets' | 'satellite' | 'dark'>(isInitiallyDark ? 'dark' : 'streets');
   const [isAdjustMode, setIsAdjustMode] = useState<boolean>(false);
   const [selectedSiteForAdjust, setSelectedSiteForAdjust] = useState<BuildingSite | null>(null);
   const [draggedCoords, setDraggedCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -348,7 +352,7 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
   const googleMapsUrl = buildGoogleMapsRouteUrl(stops, userGps);
 
   return (
-    <div className="relative w-full h-[520px] rounded-2xl overflow-hidden border border-slate-300 shadow-md">
+    <div className="relative w-full h-[520px] rounded-2xl overflow-hidden border border-slate-300 dark:border-slate-800 shadow-md">
       {/* 1. Leaflet Real Tile Map Viewport */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
@@ -358,20 +362,22 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
           href={googleMapsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-xl px-3 py-2 shadow-lg flex items-center gap-2 text-xs font-semibold text-slate-800 hover:text-blue-600 transition-all group"
+          className="bg-white/95 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/90 dark:border-slate-700/80 rounded-xl px-3 py-2 shadow-lg flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition-all group"
         >
           <div className={`w-6 h-6 rounded-md ${userGps ? 'bg-emerald-600' : 'bg-blue-600'} text-white flex items-center justify-center shrink-0`}>
             <Navigation className="w-3.5 h-3.5" />
           </div>
           <div className="flex flex-col text-left">
             <span className="leading-tight">
-              {userGps ? '📍 Canlı GPS ile Başlat' : `${stops.length} Durak Rotası`}
+              {userGps
+                ? (language === 'en' ? '📍 Start with Live GPS' : '📍 Canlı GPS ile Başlat')
+                : (language === 'en' ? `${stops.length} Stops Sequence` : `${stops.length} Durak Rotası`)}
             </span>
-            <span className="text-[10px] text-slate-500 font-mono">
-              {stops.length} bina • {totalKm.toFixed(1)} km
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+              {stops.length} {language === 'en' ? 'sites' : 'bina'} • {totalKm.toFixed(1)} km
             </span>
           </div>
-          <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-blue-600" />
+          <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-blue-500" />
         </a>
 
         {/* Location Adjustment Mode Toggle */}
@@ -381,43 +387,53 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
             setSelectedSiteForAdjust(null);
             setDraggedCoords(null);
           }}
-          className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-lg border transition-all ${
+          className={`px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-lg border transition-all cursor-pointer ${
             isAdjustMode
               ? 'bg-rose-600 text-white border-rose-700 animate-pulse'
-              : 'bg-white/95 text-slate-700 hover:bg-white border-slate-200'
+              : 'bg-white/95 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700'
           }`}
-          title="Konum Düzeltme Modu (İğneyi tutup sürükleyerek haritada gerçek yerini ayarlayın)"
+          title={language === 'en' ? 'Location Adjustment Mode (Drag and drop pins on map)' : 'Konum Düzeltme Modu (İğneyi tutup sürükleyerek haritada gerçek yerini ayarlayın)'}
         >
           <Move className="w-3.5 h-3.5" />
-          <span>{isAdjustMode ? 'Konum Ayarlama Açık' : 'Konumları Ayarla (Sürükle)'}</span>
+          <span>
+            {isAdjustMode
+              ? (language === 'en' ? 'Location Adjust Mode Active' : 'Konum Ayarlama Açık')
+              : (language === 'en' ? 'Adjust Geolocation (Drag)' : 'Konumları Ayarla (Sürükle)')}
+          </span>
         </button>
       </div>
 
       {/* 3. Top-Right Real Map Style Switcher */}
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-white/95 backdrop-blur-md p-1 rounded-xl shadow-lg border border-slate-200 pointer-events-auto text-xs">
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md p-1 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 pointer-events-auto text-xs">
         <button
           onClick={() => setMapStyle('streets')}
-          className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
-            mapStyle === 'streets' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+          className={`px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
+            mapStyle === 'streets'
+              ? 'bg-blue-600 text-white'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
-          Sokak Haritası
+          {language === 'en' ? 'Streets' : 'Sokak Haritası'}
         </button>
         <button
           onClick={() => setMapStyle('satellite')}
-          className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
-            mapStyle === 'satellite' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
+          className={`px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
+            mapStyle === 'satellite'
+              ? 'bg-slate-900 text-white dark:bg-blue-600'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
-          Uydu (Gerçek)
+          {language === 'en' ? 'Satellite' : 'Uydu'}
         </button>
         <button
           onClick={() => setMapStyle('dark')}
-          className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
-            mapStyle === 'dark' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-slate-100'
+          className={`px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer ${
+            mapStyle === 'dark'
+              ? 'bg-slate-800 text-white dark:bg-blue-600'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
-          Karanlık Mod
+          {language === 'en' ? 'Dark Map' : 'Karanlık Mod'}
         </button>
       </div>
 
@@ -427,46 +443,50 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
           <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-800">
             <span className="font-bold flex items-center gap-1.5 text-amber-400">
               <Move className="w-4 h-4" />
-              <span>Konum Düzeltme Modu</span>
+              <span>{language === 'en' ? 'Location Adjustment Mode' : 'Konum Düzeltme Modu'}</span>
             </span>
             <button
               onClick={() => setIsAdjustMode(false)}
-              className="text-slate-400 hover:text-white text-[11px]"
+              className="text-slate-400 hover:text-white text-[11px] cursor-pointer"
             >
-              Kapat
+              {language === 'en' ? 'Close' : 'Kapat'}
             </button>
           </div>
           <p className="text-slate-300 text-[11px] mb-2 leading-relaxed">
-            Düzeltmek istediğiniz binanın iğnesine tıklayın ve haritada tam doğru noktaya <strong>sürükleyip bırakın</strong>.
+            {language === 'en'
+              ? 'Click the pin of the building you want to adjust and drag & drop it to its exact entrance coordinates.'
+              : 'Düzeltmek istediğiniz binanın iğnesine tıklayın ve haritada tam doğru noktaya sürükleyip bırakın.'}
           </p>
           {selectedSiteForAdjust ? (
             <div className="bg-slate-800/80 p-2.5 rounded-xl border border-slate-700 space-y-2">
               <div className="font-semibold text-white truncate">{selectedSiteForAdjust.name}</div>
               <div className="text-[10px] text-slate-400 font-mono">
-                Yeni Koordinat: {draggedCoords ? `${draggedCoords.lat}, ${draggedCoords.lng}` : `${selectedSiteForAdjust.latitude}, ${selectedSiteForAdjust.longitude}`}
+                {language === 'en' ? 'New Coordinates' : 'Yeni Koordinat'}: {draggedCoords ? `${draggedCoords.lat}, ${draggedCoords.lng}` : `${selectedSiteForAdjust.latitude}, ${selectedSiteForAdjust.longitude}`}
               </div>
               <div className="flex items-center gap-2 pt-1">
                 <button
                   onClick={handleSaveLocation}
-                  className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                  className="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <Save className="w-3.5 h-3.5" />
-                  <span>Yeni Konumu Kaydet</span>
+                  <span>{language === 'en' ? 'Save New Location' : 'Yeni Konumu Kaydet'}</span>
                 </button>
                 <button
                   onClick={() => {
                     setSelectedSiteForAdjust(null);
                     setDraggedCoords(null);
                   }}
-                  className="py-1.5 px-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg"
+                  className="py-1.5 px-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg cursor-pointer"
                 >
-                  İptal
+                  {language === 'en' ? 'Cancel' : 'İptal'}
                 </button>
               </div>
             </div>
           ) : (
             <div className="text-[11px] text-slate-400 italic">
-              Lütfen haritada yerini değiştirmek istediğiniz binaya tıklayın.
+              {language === 'en'
+                ? 'Please click on the building pin you wish to reposition.'
+                : 'Lütfen haritada yerini değiştirmek istediğiniz binaya tıklayın.'}
             </div>
           )}
         </div>
@@ -485,9 +505,9 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
             className={`w-9 h-9 rounded-lg shadow-md border flex items-center justify-center transition-all cursor-pointer ${
               userGps
                 ? 'bg-blue-600 text-white border-blue-700 shadow-blue-500/30'
-                : 'bg-white/95 hover:bg-white text-slate-700 border-slate-200'
+                : 'bg-white/95 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700'
             }`}
-            title={userGps ? 'Konumuma Git (GPS Aktif)' : 'Cihaz Konumunu Al'}
+            title={userGps ? (language === 'en' ? 'Recenter to My GPS Location' : 'Konumuma Git (GPS Aktif)') : (language === 'en' ? 'Acquire Device GPS' : 'Cihaz Konumunu Al')}
           >
             <Navigation className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
           </button>
@@ -495,30 +515,30 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
 
         <button
           onClick={handleRecenter}
-          className="w-9 h-9 bg-white/95 hover:bg-white text-slate-700 rounded-lg shadow-md border border-slate-200 flex items-center justify-center transition-colors cursor-pointer"
-          title="Tüm Binaları Göster ve Ortala"
+          className="w-9 h-9 bg-white/95 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+          title={language === 'en' ? 'Fit all buildings in viewport' : 'Tüm Binaları Göster ve Ortala'}
         >
-          <Crosshair className="w-4 h-4 text-blue-600" />
+          <Crosshair className="w-4 h-4 text-blue-600 dark:text-blue-400" />
         </button>
       </div>
 
       {/* 6. Bottom-Left Legend */}
-      <div className="absolute bottom-3 left-3 z-10 flex items-center gap-2 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 text-[10px] font-medium pointer-events-none shadow-sm">
+      <div className="absolute bottom-3 left-3 z-10 flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-medium pointer-events-none shadow-sm">
         <div className="flex items-center gap-1">
           <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
-          <span>Sıradaki Hedef</span>
+          <span>{language === 'en' ? 'Next Target' : 'Sıradaki Hedef'}</span>
         </div>
         <div className="flex items-center gap-1">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
-          <span>Bakımı Yapıldı</span>
+          <span>{language === 'en' ? 'Inspected' : 'Bakımı Yapıldı'}</span>
         </div>
         <div className="flex items-center gap-1">
           <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-          <span>Bekliyor</span>
+          <span>{language === 'en' ? 'Pending' : 'Bekliyor'}</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="w-2.5 h-2.5 rounded-full bg-slate-500" />
-          <span>Diğer Binalar</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-500 dark:bg-slate-400" />
+          <span>{language === 'en' ? 'Other Buildings' : 'Diğer Binalar'}</span>
         </div>
       </div>
     </div>

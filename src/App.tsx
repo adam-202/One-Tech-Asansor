@@ -186,6 +186,32 @@ export default function App() {
   const [editingSite, setEditingSite] = useState<BuildingSite | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Dual Theme State (Dark / Light)
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    try {
+      const saved = localStorage.getItem('elevatorops_theme_mode');
+      if (saved === 'light' || saved === 'dark') return saved;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } catch (e) {
+      return 'dark';
+    }
+  });
+
+  useEffect(() => {
+    try {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      localStorage.setItem('elevatorops_theme_mode', theme);
+    } catch (e) {}
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
   // Authentication Handlers & Role Gate
   const isAdmin = Boolean(
     authenticatedUser?.isAdmin ||
@@ -522,8 +548,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col text-slate-900 selection:bg-blue-600 selection:text-white">
-      {/* Top Bar with Language Switcher & Profile */}
+    <div className="min-h-screen dark:bg-[#070b14] bg-slate-50 flex flex-col dark:text-slate-100 text-slate-900 selection:bg-blue-600 selection:text-white transition-colors duration-200">
+      {/* Top Bar with Language Switcher, Theme Switcher & Profile */}
       <TopNav
         activeTab={activeTab}
         onSelectTab={setActiveTab}
@@ -532,6 +558,8 @@ export default function App() {
         onSelectTechnician={setCurrentTechnician}
         language={language}
         onToggleLanguage={toggleLanguage}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
         onOpenAddSite={() => {
           setEditingSite(null);
           setIsSiteModalOpen(true);
