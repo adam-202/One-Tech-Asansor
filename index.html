@@ -16,5 +16,27 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      (function() {
+        if (window.location.hostname.indexOf('github.io') !== -1) {
+          setTimeout(function() {
+            var rootEl = document.getElementById('root');
+            if (rootEl && rootEl.childElementCount === 0) {
+              console.warn('GitHub Pages root detected without compilation. Auto-mounting built production assets...');
+              var cssLink = document.createElement('link');
+              cssLink.rel = 'stylesheet';
+              cssLink.href = '/One-Tech-Asansor/assets/index-BjAb3fU4.css';
+              document.head.appendChild(cssLink);
+
+              var jsScript = document.createElement('script');
+              jsScript.type = 'module';
+              jsScript.crossOrigin = 'anonymous';
+              jsScript.src = '/One-Tech-Asansor/assets/index-b_2QxK1u.js';
+              document.body.appendChild(jsScript);
+            }
+          }, 350);
+        }
+      })();
+    </script>
   </body>
 </html>
