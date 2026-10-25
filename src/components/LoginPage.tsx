@@ -55,8 +55,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       if (!user) {
         setError(
           language === 'en'
-            ? 'Account not found. Please contact Operations Director (Adam) for access.'
-            : 'Hesap bulunamadı. Erişim için lütfen Operasyon Yöneticisi (Adam) ile iletişime geçin.'
+            ? 'Account not found on this device. If this member was created on another phone, please sync devices via Cloud DB or Device Transfer.'
+            : 'Bu cihazda kayıtlı hesap bulunamadı. Eğer üye başka bir telefondan eklendiyse, iki cihazı eşitlemek için Bulut DB veya Hızlı Transfer kodu kullanılmalıdır.'
         );
         setLoading(false);
         return;
@@ -68,8 +68,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({
       if (cleanPass !== expectedPassword) {
         setError(
           language === 'en'
-            ? 'Incorrect password. Please verify your credentials or ask Admin for a reset.'
-            : 'Hatalı şifre. Lütfen bilgilerinizi kontrol edin veya yöneticiden sıfırlama talep edin.'
+            ? 'Incorrect password. Default password for new members is "tech123". Please check your password or contact Adam.'
+            : 'Hatalı şifre. Yeni personeller için varsayılan şifre "tech123"tür. Lütfen şifrenizi kontrol edin veya Adam ile iletişime geçin.'
         );
         setLoading(false);
         return;

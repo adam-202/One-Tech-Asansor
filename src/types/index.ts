@@ -32,6 +32,13 @@ export interface VisitRecord {
   durationMinutes: number;
 }
 
+export interface SparePartItem {
+  id: string;
+  partName: string; // e.g. "Steel Wire Rope 10mm 8x19S", "Door Interlock Switch", "Cabin Roller Guide"
+  quantity: string; // e.g. "160m", "4 pcs", "1 set"
+  notes?: string;
+}
+
 export interface BuildingSite {
   id: string;
   name: string;
@@ -53,6 +60,14 @@ export interface BuildingSite {
   priority?: 'normal' | 'high' | 'vip' | 'fault_alert';
   lastVisit?: VisitRecord;
   visitHistory?: VisitRecord[]; // multiple visits per month allowed for faults/emergencies
+
+  // Technical Specs, Wires, and Spare Parts Inventory
+  machineType?: string; // e.g. "Gearless Synchronous PM", "Geared Traction", "Hydraulic"
+  suspensionRatio?: string; // e.g. "1:1", "2:1", "4:1"
+  wireRopeSpecs?: string; // e.g. "Ø10mm 8x19S-SFC (5 ropes x 165m)"
+  controlPanel?: string; // e.g. "Arkel A-Cube", "Mikrolift ML65", "KONE LCE", "Step"
+  doorOperator?: string; // e.g. "VVVF 2-Panel Center", "Telescopic Side"
+  spareParts?: SparePartItem[]; // Dynamic list of spare parts and components
 }
 
 export interface Technician {

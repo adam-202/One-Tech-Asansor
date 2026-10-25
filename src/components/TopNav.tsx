@@ -84,7 +84,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             {/* Cycle Indicator (Desktop only) */}
             <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-xl dark:bg-slate-900/80 bg-slate-100/90 border dark:border-slate-800 border-slate-200 text-xs dark:text-slate-300 text-slate-600 shadow-2xs">
               <Calendar className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
-              <span className="font-medium">Oct 2026 {t.currentCycle}</span>
+              <span className="font-medium">{language === 'tr' ? 'Ekim 2026' : 'Oct 2026'} {t.currentCycle}</span>
               <span aria-hidden="true" className="dark:text-slate-600 text-slate-300">•</span>
               <span className="font-mono tabular-nums font-bold dark:text-slate-100 text-slate-800">
                 {visitedSitesCount}/{totalSitesCount} {t.visited} ({completionPercentage}%)
@@ -162,14 +162,20 @@ export const TopNav: React.FC<TopNavProps> = ({
               </button>
             )}
 
-            {/* Language Toggle Button */}
+            {/* Language Toggle Button (Shows Active Language with Flag) */}
             <button
               onClick={onToggleLanguage}
-              className="inline-flex items-center gap-1 px-2.5 py-2 text-xs font-bold rounded-xl dark:bg-slate-900 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 dark:text-slate-200 text-slate-700 border dark:border-slate-800 border-slate-200/80 transition-all active:scale-95 shadow-2xs cursor-pointer"
-              title="Switch Language / Dil Değiştir"
+              className="inline-flex items-center gap-1.5 px-2.5 py-2 text-xs font-bold rounded-xl dark:bg-slate-900 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-800 dark:text-slate-200 text-slate-700 border dark:border-slate-800 border-slate-200/80 transition-all active:scale-95 shadow-2xs cursor-pointer"
+              title={
+                language === 'tr'
+                  ? 'Aktif Dil: Türkçe (İngilizceye geçmek için tıklayın)'
+                  : 'Active Language: English (Click to switch to Turkish)'
+              }
             >
               <Globe className="w-3.5 h-3.5 text-blue-500" />
-              <span className="text-[11px] font-mono font-bold">{language === 'en' ? 'TR' : 'EN'}</span>
+              <span className="text-[11px] font-bold">
+                {language === 'tr' ? '🇹🇷 TR' : '🇺🇸 EN'}
+              </span>
             </button>
 
             {/* Supabase Cloud DB Status Pill */}
@@ -178,14 +184,24 @@ export const TopNav: React.FC<TopNavProps> = ({
                 onClick={onOpenSupabaseConnect}
                 className={`inline-flex items-center gap-1.5 px-2.5 py-2 text-xs font-semibold rounded-xl border transition-all active:scale-95 shadow-2xs cursor-pointer ${
                   isSupabaseConnected
-                    ? 'dark:bg-emerald-950/30 bg-emerald-50 text-emerald-700 dark:text-emerald-400 border-emerald-500/30'
-                    : 'dark:bg-amber-950/30 bg-amber-50 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                    ? 'dark:bg-emerald-950/30 bg-emerald-50 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-100/60'
+                    : 'dark:bg-amber-950/30 bg-amber-50 text-amber-700 dark:text-amber-300 border-amber-500/30 hover:bg-amber-100/60'
                 }`}
-                title={isSupabaseConnected ? 'Supabase Connected (Live)' : 'Connect Supabase Cloud Database'}
+                title={
+                  isSupabaseConnected
+                    ? language === 'tr'
+                      ? 'Bulut DB Aktif (Telefon & PC Eşitleniyor)'
+                      : 'Cloud DB Active (Phone & PC Synced)'
+                    : language === 'tr'
+                      ? 'Bulut DB Bağlı Değil (Veriler yerel). Telefon ile PC senkronizasyonu için tıklayın.'
+                      : 'Cloud DB Offline (Local data). Click to sync phone & laptop.'
+                }
               >
                 <Database className={`w-3.5 h-3.5 ${isSupabaseConnected ? 'text-emerald-500' : 'text-amber-500'}`} />
-                <span className="hidden lg:inline text-[11px] font-semibold">
-                  {isSupabaseConnected ? 'DB: Live' : 'Connect DB'}
+                <span className="hidden sm:inline text-[11px] font-semibold">
+                  {isSupabaseConnected
+                    ? language === 'tr' ? 'Bulut: Canlı' : 'Cloud: Synced'
+                    : language === 'tr' ? 'Bulut: Yerel' : 'Cloud: Local'}
                 </span>
                 <span className={`w-1.5 h-1.5 rounded-full ${isSupabaseConnected ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-amber-500 animate-pulse'}`} />
               </button>
@@ -226,7 +242,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                     {currentTechnician.name}
                   </div>
                   <div className="text-[10px] dark:text-slate-400 text-slate-500 font-mono truncate max-w-[90px]">
-                    {currentTechnician.isAdmin ? 'Director' : 'Tech'}
+                    {currentTechnician.isAdmin ? (language === 'tr' ? 'Yönetici' : 'Director') : (language === 'tr' ? 'Teknisyen' : 'Tech')}
                   </div>
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />

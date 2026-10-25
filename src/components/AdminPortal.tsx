@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BuildingSite, Technician } from '../types';
 import {
   ShieldAlert,
@@ -100,6 +100,24 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [assignModalSearch, setAssignModalSearch] = useState('');
   const [assignModalNeighborhood, setAssignModalNeighborhood] = useState('all');
   const [assignModalFilterMode, setAssignModalFilterMode] = useState<'all' | 'assigned' | 'other'>('all');
+
+  // Handle mobile swipe back / browser back for sub-modals
+  useEffect(() => {
+    const isAnySubModalOpen = isAddMemberOpen || Boolean(editingTech) || Boolean(assigningTech) || Boolean(resettingTech);
+    if (!isAnySubModalOpen) return;
+
+    window.history.pushState({ adminSubModal: true }, '');
+
+    const handlePopState = () => {
+      setIsAddMemberOpen(false);
+      setEditingTech(null);
+      setAssigningTech(null);
+      setResettingTech(null);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isAddMemberOpen, editingTech, assigningTech, resettingTech]);
 
   const filteredSites = sites.filter((s) => {
     if (selectedTechFilter !== 'all' && s.assignedTechnicianEmail !== selectedTechFilter) return false;
@@ -312,7 +330,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     const newTech: Technician = {
       id: `tech-${Date.now()}`,
       name: newMemberName.trim(),
-      email: newMemberEmail.trim(),
+      email: newMemberEmail.trim().toLowerCase(),
       password: newMemberPassword.trim() || 'tech123',
       isAdmin: newMemberIsAdmin,
       phone: newMemberPhone.trim(),

@@ -36,13 +36,13 @@ const STORAGE_LANG_KEY = 'elevatorops_language';
 const STORAGE_AUTH_KEY = 'elevatorops_auth_session';
 
 export default function App() {
-  // 1. Language state (defaults to English 'en')
+  // 1. Language state (defaults to Turkish 'tr')
   const [language, setLanguage] = useState<Language>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_LANG_KEY);
       if (saved === 'en' || saved === 'tr') return saved;
     } catch (e) {}
-    return 'en';
+    return 'tr';
   });
 
   const toggleLanguage = () => {
@@ -447,6 +447,12 @@ export default function App() {
     );
   };
 
+  // Live update inspecting site when specs/parts are edited
+  const handleUpdateInspectingSite = (savedSite: BuildingSite) => {
+    handleSaveSite(savedSite);
+    setInspectingSite(savedSite);
+  };
+
   // Site deletion
   const handleDeleteSite = (siteId: string) => {
     const target = sites.find((s) => s.id === siteId);
@@ -684,6 +690,7 @@ export default function App() {
         isOpen={Boolean(inspectingSite)}
         onClose={() => setInspectingSite(null)}
         onSaveVisit={handleSaveVisit}
+        onUpdateSite={handleUpdateInspectingSite}
       />
 
       {/* Add / Edit Site Modal */}
@@ -718,6 +725,16 @@ export default function App() {
         onClose={() => setIsSupabaseModalOpen(false)}
         sites={sites}
         technicians={technicians}
+        language={language}
+        onImportData={(importedSites, importedTechs) => {
+          setSites(importedSites);
+          setTechnicians(importedTechs);
+          showToast(
+            language === 'en'
+              ? 'Data synchronized successfully from device!'
+              : 'Veriler diğer cihazdan başarıyla eşitlendi!'
+          );
+        }}
         onSyncComplete={() => {
           setIsSupabaseConnected(true);
           showToast(

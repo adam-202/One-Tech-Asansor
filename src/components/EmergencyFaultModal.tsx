@@ -50,6 +50,42 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
   const [partsReplaced, setPartsReplaced] = useState<string>('');
   const [attendingTechs, setAttendingTechs] = useState<string[]>([technicianName]);
 
+  // Mobile history navigation support: pushState when opening modal so swipe-back on mobile closes modal instead of exiting app
+  useEffect(() => {
+    if (!isOpen) return;
+    const stateId = `modal_emergency_${Date.now()}`;
+    window.history.pushState({ modalOpen: true, id: stateId }, '');
+
+    const handlePopState = () => {
+      onClose();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [isOpen, onClose]);
+
+  // Touch swipe-to-dismiss gesture for mobile
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+    setTouchStartY(e.touches[0].clientY);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null || touchStartY === null) return;
+    const diffX = e.changedTouches[0].clientX - touchStartX;
+    const diffY = Math.abs(e.changedTouches[0].clientY - touchStartY);
+    if (diffX > 80 && diffX > diffY * 1.5 && touchStartX < 120) {
+      onClose();
+    }
+    setTouchStartX(null);
+    setTouchStartY(null);
+  };
+
   // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -131,6 +167,8 @@ export const EmergencyFaultModal: React.FC<EmergencyFaultModalProps> = ({
           onClose();
         }
       }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-950/80 backdrop-blur-xs cursor-pointer"
     >
       <div className="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-rose-200 dark:border-rose-900/50 overflow-hidden my-6 cursor-default">
