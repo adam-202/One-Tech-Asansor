@@ -17,6 +17,8 @@ import {
   Compass,
 } from 'lucide-react';
 
+import { getSupabase, isSupabaseConfigured } from '../utils/supabase';
+
 interface LoginPageProps {
   technicians: Technician[];
   onLoginSuccess: (user: Technician) => void;
@@ -38,7 +40,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
   const t = translations[language];
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -46,24 +48,53 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     const cleanEmail = email.trim().toLowerCase();
     const cleanPass = password.trim();
 
-    setTimeout(() => {
-      // Find technician
-      const user = technicians.find(
+    try {
+      // 1. Find technician in local state
+      let user = technicians.find(
         (t) => t.email.toLowerCase().trim() === cleanEmail
       );
+
+      // 2. If not found locally, query Supabase cloud live (in case added from phone/another device)
+      if (!user && isSupabaseConfigured()) {
+        const client = getSupabase();
+        if (client) {
+          const { data, error: sbError } = await client
+            .from('technicians')
+            .select('*')
+            .ilike('email', cleanEmail)
+            .limit(1);
+
+          if (!sbError && data && data.length > 0) {
+            const row = data[0];
+            user = {
+              id: row.id,
+              name: row.name,
+              email: row.email,
+              phone: row.phone || '',
+              role: row.role || 'Field Technician',
+              assignedCount: row.assigned_count || 0,
+              avatarColor: row.avatar_color || 'bg-blue-600',
+              password: row.password || 'tech123',
+              isAdmin: Boolean(row.is_admin || row.email === 'adam.osama60@gmail.com'),
+            };
+          }
+        }
+      }
 
       if (!user) {
         setError(
           language === 'en'
-            ? 'Account not found on this device. If this member was created on another phone, please sync devices via Cloud DB or Device Transfer.'
-            : 'Bu cihazda kayıtlı hesap bulunamadı. Eğer üye başka bir telefondan eklendiyse, iki cihazı eşitlemek için Bulut DB veya Hızlı Transfer kodu kullanılmalıdır.'
+            ? 'Account not found. Please verify the email address or register the technician in Operations Director.'
+            : 'Kayıtlı hesap bulunamadı. Lütfen e-posta adresini kontrol edin veya Operasyon Direktörü panelinden personeli ekleyin.'
         );
         setLoading(false);
         return;
       }
 
       // Check password (default password if undefined is 'onetech2026' for Adam, 'tech123' for others)
-      const expectedPassword = user.password || (user.isAdmin || user.email === 'adam.osama60@gmail.com' ? 'onetech2026' : 'tech123');
+      const expectedPassword =
+        user.password ||
+        (user.isAdmin || user.email === 'adam.osama60@gmail.com' ? 'onetech2026' : 'tech123');
 
       if (cleanPass !== expectedPassword) {
         setError(
@@ -77,7 +108,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
       setLoading(false);
       onLoginSuccess(user);
-    }, 400);
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(
+        language === 'en'
+          ? 'An unexpected error occurred during login. Please try again.'
+          : 'Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.'
+      );
+      setLoading(false);
+    }
   };
 
   const fillQuickLogin = (tech: Technician) => {
