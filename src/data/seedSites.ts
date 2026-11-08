@@ -13,25 +13,14 @@ export const INITIAL_TECHNICIANS: Technician[] = [
     "isAdmin": true
   },
   {
-    "id": "tech-mehmet",
-    "name": "Mehmet Yılmaz",
-    "email": "mehmet.asansor@onetech.com",
-    "phone": "+90 532 400 1122",
-    "role": "Senior Field Specialist",
-    "assignedCount": 10,
+    "id": "tech-batu",
+    "name": "Batu Isaat",
+    "email": "isatbatu@gmail.com",
+    "phone": "+90 532 000 0000",
+    "role": "Field Technician",
+    "assignedCount": 16,
     "avatarColor": "bg-emerald-600",
-    "password": "tech123",
-    "isAdmin": false
-  },
-  {
-    "id": "tech-can",
-    "name": "Can Demir",
-    "email": "can.demir@onetech.com",
-    "phone": "+90 533 800 3344",
-    "role": "Field Service Technician",
-    "assignedCount": 6,
-    "avatarColor": "bg-amber-600",
-    "password": "tech123",
+    "password": "batu123",
     "isAdmin": false
   }
 ];

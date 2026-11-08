@@ -45,13 +45,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     setError(null);
     setLoading(true);
 
-    const cleanEmail = email.trim().toLowerCase();
+    const normalizeEmail = (raw: string) => raw.trim().replace(/İ/g, 'i').replace(/I/g, 'i').toLowerCase();
+    const cleanEmail = normalizeEmail(email);
     const cleanPass = password.trim();
 
     try {
       // 1. Find technician in local state
       let user = technicians.find(
-        (t) => t.email.toLowerCase().trim() === cleanEmail
+        (t) => normalizeEmail(t.email) === cleanEmail
       );
 
       // 2. If not found locally, query Supabase cloud live (in case added from phone/another device)

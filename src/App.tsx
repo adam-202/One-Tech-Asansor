@@ -62,8 +62,23 @@ export default function App() {
     try {
       const saved = localStorage.getItem(STORAGE_TECHS_KEY);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        let parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Clean up old demo technicians
+          parsed = parsed.filter(
+            (t: any) =>
+              t.email !== 'mehmet.asansor@onetech.com' &&
+              t.email !== 'can.demir@onetech.com' &&
+              t.id !== 'tech-mehmet' &&
+              t.id !== 'tech-can'
+          );
+          // Ensure Batu Isaat is present
+          if (!parsed.some((t: any) => t.email.toLowerCase() === 'isatbatu@gmail.com')) {
+            const batu = INITIAL_TECHNICIANS.find((t) => t.email === 'isatbatu@gmail.com');
+            if (batu) parsed.push(batu);
+          }
+          return parsed;
+        }
       }
     } catch (e) {
       console.error('Error loading stored technicians:', e);
@@ -222,6 +237,12 @@ export default function App() {
   const handleLoginSuccess = (user: Technician) => {
     setAuthenticatedUser(user);
     setCurrentTechnician(user);
+    setTechnicians((prev) => {
+      if (!prev.some((t) => t.id === user.id || t.email.toLowerCase() === user.email.toLowerCase())) {
+        return [...prev, user];
+      }
+      return prev;
+    });
     try {
       localStorage.setItem(STORAGE_AUTH_KEY, JSON.stringify(user));
     } catch (e) {}
