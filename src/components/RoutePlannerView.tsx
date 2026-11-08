@@ -3,6 +3,7 @@ import { BuildingSite, RouteStop, Technician } from '../types';
 import { Language, translations } from '../utils/translations';
 import {
   optimizeRouteSequence,
+  pickNearestClusterAndOptimize,
   evaluateRouteOptimizationMetrics,
   buildGoogleMapsRouteUrl,
   buildSingleSiteMapUrl,
@@ -139,9 +140,13 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
   // Generated route stops with distance calculations
   const currentStops: RouteStop[] = useMemo(() => {
     if (queuedSiteIds.length === 0) {
-      const initialPool = unvisitedCandidateSites.slice(0, targetBatchSize);
-      if (initialPool.length > 0) {
-        return optimizeRouteSequence(initialPool, userGps?.latitude, userGps?.longitude);
+      if (unvisitedCandidateSites.length > 0) {
+        return pickNearestClusterAndOptimize(
+          unvisitedCandidateSites,
+          targetBatchSize,
+          userGps?.latitude,
+          userGps?.longitude
+        );
       }
       return [];
     }
@@ -175,7 +180,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
         estimatedTravelMin: Math.max(1, estMin),
       };
     });
-  }, [queuedSiteIds, unvisitedCandidateSites, sites, targetBatchSize]);
+  }, [queuedSiteIds, unvisitedCandidateSites, sites, targetBatchSize, userGps]);
 
   // Compute optimization comparison metrics
   const optimizationMetrics = useMemo(() => {
@@ -183,7 +188,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
     return evaluateRouteOptimizationMetrics(sitesToEval);
   }, [currentStops]);
 
-  // Handler to trigger smart route optimization using 2-opt TSP
+  // Handler to trigger smart route optimization using nearest cluster + 2-opt TSP
   const handleSuggestOptimizedOrder = () => {
     const pending = unvisitedCandidateSites;
     if (pending.length === 0) {
@@ -191,9 +196,13 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
       return;
     }
 
-    // Take top batch and apply TSP sequence optimization with user GPS start coordinate
-    const batch = pending.slice(0, targetBatchSize);
-    const optimized = optimizeRouteSequence(batch, userGps?.latitude, userGps?.longitude);
+    // Pick nearest contiguous cluster of spots to finish from current location
+    const optimized = pickNearestClusterAndOptimize(
+      pending,
+      targetBatchSize,
+      userGps?.latitude,
+      userGps?.longitude
+    );
     setQueuedSiteIds(optimized.map((s) => s.site.id));
     setActiveStopIndex(0);
   };
@@ -290,10 +299,10 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
             <button
               onClick={handleSuggestOptimizedOrder}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-md shadow-blue-600/20 active:scale-95 transition-all cursor-pointer"
-              title={language === 'tr' ? 'En kısa rotayı otomatik sırala' : 'Compute shortest Hamiltonian visitation sequence'}
+              title={language === 'tr' ? 'En yakın binaları bularak en kısa rotayı otomatik sırala' : 'Find nearest spots and compute shortest Hamiltonian visitation sequence'}
             >
               <Sparkles className="w-4 h-4 text-blue-200" />
-              <span>{language === 'tr' ? 'Rotayı Optimize Et' : 'Suggest Optimized Order'}</span>
+              <span>{language === 'tr' ? 'En Yakın Binaları Öner' : 'Suggest Nearest Spots'}</span>
             </button>
 
             <button

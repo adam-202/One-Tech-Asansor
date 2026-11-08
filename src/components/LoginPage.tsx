@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 
 import { getSupabase, isSupabaseConfigured } from '../utils/supabase';
+import { recordLoginAudit } from '../utils/auditLogger';
 
 interface LoginPageProps {
   technicians: Technician[];
@@ -106,6 +107,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({
         setLoading(false);
         return;
       }
+
+      // Record security audit log with device and phone tracking
+      recordLoginAudit(user).catch((e) => console.warn('Audit record note:', e));
 
       setLoading(false);
       onLoginSuccess(user);

@@ -413,7 +413,7 @@ export const SiteModal: React.FC<SiteModalProps> = ({
               <input
                 type="number"
                 min={1}
-                max={20}
+                max={200}
                 value={elevatorUnits}
                 onChange={(e) => setElevatorUnits(Number(e.target.value))}
                 className="w-full text-xs p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-hidden font-mono"

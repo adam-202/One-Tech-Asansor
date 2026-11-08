@@ -182,6 +182,14 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
     (s) => isSiteAssignedTo(s, currentTechnician.email)
   ).length;
 
+  const totalElevatorsAll = useMemo(() => {
+    return sites.reduce((sum, s) => sum + (Number(s.elevatorUnits) || 1), 0);
+  }, [sites]);
+
+  const totalElevatorsFiltered = useMemo(() => {
+    return filteredSites.reduce((sum, s) => sum + (Number(s.elevatorUnits) || 1), 0);
+  }, [filteredSites]);
+
   const isAnyFilterActive =
     searchQuery.trim() !== '' ||
     statusFilter !== 'all' ||
@@ -219,7 +227,9 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
             <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
               <span>Elevator Portfolio Master Directory</span>
               <span aria-hidden="true">·</span>
-              <span className="font-mono tabular-nums text-slate-800 dark:text-slate-200 font-semibold">{sites.length} Total Contracts</span>
+              <span className="font-mono tabular-nums text-slate-800 dark:text-slate-200 font-semibold">
+                {sites.length} Total Contracts ({totalElevatorsAll} Elevators)
+              </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
               Sites Directory & Fleet Register
@@ -503,7 +513,7 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
       {/* Results HUD */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 text-xs text-slate-500 dark:text-slate-400">
         <span className="font-mono tabular-nums">
-          Showing <strong className="text-slate-900 dark:text-white">{filteredSites.length}</strong> of <strong className="text-slate-900 dark:text-white">{sites.length}</strong> contracted sites
+          Showing <strong className="text-slate-900 dark:text-white">{filteredSites.length}</strong> of <strong className="text-slate-900 dark:text-white">{sites.length}</strong> contracted sites (<strong className="text-blue-600 dark:text-blue-400">{totalElevatorsFiltered}</strong> of {totalElevatorsAll} total elevators)
         </span>
         <div className="flex items-center gap-3 self-end sm:self-center">
           {/* Grid / List View Toggle */}

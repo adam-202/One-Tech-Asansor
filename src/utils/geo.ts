@@ -134,6 +134,52 @@ export function optimizeRouteSequence(
 }
 
 /**
+ * Selects the nearest contiguous cluster of N pending sites starting from the user's
+ * current GPS location (or reference coordinate) using greedy nearest-neighbor chaining,
+ * then applies 2-Opt TSP optimization to produce the most efficient visitation sequence.
+ */
+export function pickNearestClusterAndOptimize(
+  candidateSites: BuildingSite[],
+  batchSize: number,
+  startLat?: number,
+  startLng?: number
+): RouteStop[] {
+  if (candidateSites.length === 0) return [];
+  if (candidateSites.length <= batchSize) {
+    return optimizeRouteSequence(candidateSites, startLat, startLng);
+  }
+
+  // 1. Reference starting coordinate: technician's live GPS or reference center (Kadıköy / Istanbul)
+  const originLat = startLat ?? (candidateSites[0] ? candidateSites[0].latitude : 40.985);
+  const originLng = startLng ?? (candidateSites[0] ? candidateSites[0].longitude : 29.030);
+
+  // 2. Greedy Nearest-Neighbor chain: repeatedly find the closest unvisited site from current position
+  const pool = [...candidateSites];
+  const selected: BuildingSite[] = [];
+  let curLat = originLat;
+  let curLng = originLng;
+
+  while (selected.length < batchSize && pool.length > 0) {
+    let nearestIdx = 0;
+    let minDist = Infinity;
+    for (let i = 0; i < pool.length; i++) {
+      const d = calculateDistanceKm(curLat, curLng, pool[i].latitude, pool[i].longitude);
+      if (d < minDist) {
+        minDist = d;
+        nearestIdx = i;
+      }
+    }
+    const [nearestSite] = pool.splice(nearestIdx, 1);
+    selected.push(nearestSite);
+    curLat = nearestSite.latitude;
+    curLng = nearestSite.longitude;
+  }
+
+  // 3. Apply 2-opt TSP optimization on the selected nearest cluster
+  return optimizeRouteSequence(selected, originLat, originLng);
+}
+
+/**
  * Builds a direct Google Maps multi-stop directions URL
  * Suitable for launching in browser or mobile Google Maps app for GPS turn-by-turn navigation.
  */

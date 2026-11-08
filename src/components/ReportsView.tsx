@@ -18,6 +18,7 @@ import {
   TrendingUp,
   CheckCircle2,
   AlertOctagon,
+  Layers,
 } from 'lucide-react';
 import {
   exportSitesToCsv,
@@ -47,6 +48,11 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
   const [selectedTechEmail, setSelectedTechEmail] = useState<string>(currentTechnician.email);
   const [recipientEmail, setRecipientEmail] = useState<string>('supervisor@elevatormaintenance.com');
   const [copiedSuccess, setCopiedSuccess] = useState<boolean>(false);
+
+  // Total elevators across all contracts
+  const totalElevators = useMemo(() => {
+    return sites.reduce((sum, s) => sum + (Number(s.elevatorUnits) || 1), 0);
+  }, [sites]);
 
   // Filter sites for the selected report target
   const targetSites = useMemo(() => {
@@ -173,7 +179,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
         </div>
 
         {/* Global Progress Metrics Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
             <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
               <span>{language === 'tr' ? 'Sözleşmeli Binalar' : 'Total Contracts'}</span>
@@ -184,6 +190,19 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
             </p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
               {language === 'tr' ? '%100 Aylık Hedef' : '100% Monthly Target'}
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-800/60">
+            <div className="text-[11px] font-semibold text-blue-800 dark:text-blue-300 uppercase tracking-wider mb-1 flex items-center justify-between">
+              <span>{language === 'tr' ? 'Toplam Asansör' : 'Total Elevators'}</span>
+              <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <p className="text-2xl font-bold text-blue-900 dark:text-blue-100 font-mono tabular-nums">
+              {totalElevators}
+            </p>
+            <p className="text-[11px] text-blue-700 dark:text-blue-400">
+              {language === 'tr' ? 'Aktif portföy üniteleri' : 'Active fleet units'}
             </p>
           </div>
 

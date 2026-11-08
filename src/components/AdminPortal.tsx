@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BuildingSite, Technician } from '../types';
+import { BuildingSite, Technician, LoginAuditLog } from '../types';
 import {
   ShieldAlert,
   Users,
@@ -29,6 +29,13 @@ import {
   MapPin,
   CheckSquare,
   Square,
+  Smartphone,
+  Laptop,
+  Tablet,
+  Clock,
+  Activity,
+  ShieldCheck,
+  RefreshCw,
 } from 'lucide-react';
 import { exportSitesToCsv } from '../utils/exportReport';
 import { Language, translations } from '../utils/translations';
@@ -38,6 +45,7 @@ import {
   isSiteAssignedTo,
   getAssignedTechnicians,
 } from '../utils/assignment';
+import { fetchLoginAuditLogs, clearLoginAuditLogs, recordLoginAudit } from '../utils/auditLogger';
 
 interface AdminPortalProps {
   sites: BuildingSite[];
@@ -108,6 +116,96 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const [assignModalSearch, setAssignModalSearch] = useState('');
   const [assignModalNeighborhood, setAssignModalNeighborhood] = useState('all');
   const [assignModalFilterMode, setAssignModalFilterMode] = useState<'all' | 'assigned' | 'other'>('all');
+
+  // Navigation tab for Admin Portal: 'fleet' (Team Roster & Building Allocations) | 'security' (Login & Device Audit)
+  const [activeAdminTab, setActiveAdminTab] = useState<'fleet' | 'security'>('fleet');
+
+  // Login Audit Logs state
+  const [loginLogs, setLoginLogs] = useState<LoginAuditLog[]>([]);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+  const [auditSearch, setAuditSearch] = useState('');
+  const [auditFilter, setAuditFilter] = useState<'all' | 'different_only' | 'mobile_only'>('all');
+
+  const loadAuditLogs = async () => {
+    setIsLoadingLogs(true);
+    try {
+      let logs = await fetchLoginAuditLogs();
+      if (logs.length === 0 && currentTechnician) {
+        // Record current session if completely empty so admin sees their login
+        const initialLog = await recordLoginAudit(currentTechnician);
+        logs = [initialLog];
+      }
+      setLoginLogs(logs);
+    } catch (e) {
+      console.warn('Failed loading audit logs:', e);
+    } finally {
+      setIsLoadingLogs(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAuditLogs();
+  }, []);
+
+  const handleClearAuditLogs = async () => {
+    const confirmMsg =
+      language === 'en'
+        ? 'Are you sure you want to clear all login and device tracking logs?'
+        : 'Tüm giriş ve mobil cihaz güvenlik kayıtlarını silmek istediğinize emin misiniz?';
+    if (!window.confirm(confirmMsg)) return;
+
+    await clearLoginAuditLogs();
+    setLoginLogs([]);
+    setSuccessToast(
+      language === 'en' ? 'Audit logs cleared successfully.' : 'Giriş kayıtları başarıyla temizlendi.'
+    );
+    setTimeout(() => setSuccessToast(null), 3000);
+  };
+
+  const formatLogTime = (isoString: string) => {
+    try {
+      const d = new Date(isoString);
+      const dateStr = d.toLocaleDateString(language === 'en' ? 'en-US' : 'tr-TR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+      const diffMs = Date.now() - d.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      let relative = '';
+      if (diffMins < 1) relative = language === 'en' ? 'Just now' : 'Az önce';
+      else if (diffMins < 60) relative = `${diffMins} ${language === 'en' ? 'min ago' : 'dk önce'}`;
+      else {
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) relative = `${diffHours} ${language === 'en' ? 'hrs ago' : 'saat önce'}`;
+        else relative = `${Math.floor(diffHours / 24)} ${language === 'en' ? 'days ago' : 'gün önce'}`;
+      }
+      return { dateStr, relative };
+    } catch {
+      return { dateStr: isoString, relative: '' };
+    }
+  };
+
+  const differentDeviceAlertsCount = loginLogs.filter((l) => l.isDifferentDevice).length;
+  const mobileLoginsCount = loginLogs.filter((l) => l.deviceType === 'mobile').length;
+
+  const filteredLogs = loginLogs.filter((log) => {
+    if (auditFilter === 'different_only' && !log.isDifferentDevice) return false;
+    if (auditFilter === 'mobile_only' && log.deviceType !== 'mobile') return false;
+    if (auditSearch.trim()) {
+      const q = auditSearch.toLowerCase();
+      return (
+        log.userName.toLowerCase().includes(q) ||
+        log.userEmail.toLowerCase().includes(q) ||
+        log.deviceName.toLowerCase().includes(q) ||
+        log.browser.toLowerCase().includes(q)
+      );
+    }
+    return true;
+  });
 
   // Handle mobile swipe back / browser back for sub-modals
   useEffect(() => {
@@ -437,7 +535,51 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
         </div>
       )}
 
-      {/* 3. Team Roster & Member Management */}
+      {/* Sub-Tab Navigation: Fleet Management vs Security & Login Audit */}
+      <div className="flex flex-wrap items-center gap-2 pt-1 border-b border-slate-200 dark:border-slate-800 pb-3">
+        <button
+          onClick={() => setActiveAdminTab('fleet')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeAdminTab === 'fleet'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
+              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
+          }`}
+        >
+          <Building2 className="w-4 h-4" />
+          <span>{language === 'en' ? 'Team Roster & Building Allocations' : 'Ekip Kadrosu & Bina Atamaları'}</span>
+          <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-semibold ${activeAdminTab === 'fleet' ? 'bg-blue-500/40 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+            {sites.length} {language === 'en' ? 'Sites' : 'Bina'}
+          </span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveAdminTab('security');
+            loadAuditLogs();
+          }}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+            activeAdminTab === 'security'
+              ? 'bg-slate-900 dark:bg-slate-800 text-white shadow-md'
+              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700'
+          }`}
+        >
+          <ShieldAlert className={`w-4 h-4 ${differentDeviceAlertsCount > 0 ? 'text-amber-400 animate-bounce' : 'text-emerald-500'}`} />
+          <span>{language === 'en' ? 'Login & Device Security Audit' : 'Giriş & Güvenlik Günlüğü (Cihaz Takibi)'}</span>
+          {differentDeviceAlertsCount > 0 ? (
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-500 text-slate-950 animate-pulse">
+              ⚠️ {differentDeviceAlertsCount} {language === 'en' ? 'Different Device' : 'Farklı Cihaz!'}
+            </span>
+          ) : (
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-semibold ${activeAdminTab === 'security' ? 'bg-slate-700 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}`}>
+              {loginLogs.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {activeAdminTab === 'fleet' && (
+        <>
+          {/* 3. Team Roster & Member Management */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -800,6 +942,290 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
           </table>
         </div>
       </div>
+      </>
+      )}
+
+      {/* 4. Login & Mobile Device Security Activity Audit Panel */}
+      {activeAdminTab === 'security' && (
+        <div className="space-y-5 animate-fadeIn">
+          {/* Top Security Banner & Metrics */}
+          <div className="bg-white dark:bg-slate-900/90 rounded-2xl p-5 border border-slate-200/90 dark:border-slate-800 shadow-xs backdrop-blur-md">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
+                  <span className="font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                    {language === 'en' ? 'Device Integrity & Access Logs' : 'Cihaz Bütünlüğü & Giriş Denetimi'}
+                  </span>
+                  <span aria-hidden="true">·</span>
+                  <span className="font-mono tabular-nums">{loginLogs.length} {language === 'en' ? 'Records' : 'Kayıt'}</span>
+                </div>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  <span>{language === 'en' ? 'Login & Mobile Device Activity Audit' : 'Personel Giriş & Mobil Cihaz Güvenlik Günlüğü'}</span>
+                </h2>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 max-w-2xl">
+                  {language === 'en'
+                    ? 'Track who logged into the system, exact timestamps, and automatically identify if a different mobile phone or unrecognized browser was used.'
+                    : 'Kimin ne zaman sisteme giriş yaptığını, cihaz donanım detaylarını ve personelin farklı bir mobil telefon kullanıp kullanmadığını anlık denetleyin.'}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 self-start sm:self-center">
+                <button
+                  onClick={loadAuditLogs}
+                  disabled={isLoadingLogs}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer disabled:opacity-50"
+                  title="Yenile"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isLoadingLogs ? 'animate-spin text-blue-600' : ''}`} />
+                  <span>{language === 'en' ? 'Refresh' : 'Yenile'}</span>
+                </button>
+
+                {loginLogs.length > 0 && (
+                  <button
+                    onClick={handleClearAuditLogs}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors border border-rose-200 dark:border-rose-900/60 cursor-pointer"
+                    title="Geçmişi Temizle"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>{language === 'en' ? 'Clear' : 'Temizle'}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Security KPI Metrics */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+                <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <span>{language === 'en' ? 'Total Logins Recorded' : 'Toplam Kaydedilen Giriş'}</span>
+                  <Activity className="w-3.5 h-3.5 text-slate-400" />
+                </div>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white font-mono tabular-nums">
+                  {loginLogs.length}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  {language === 'en' ? 'Across all field technicians' : 'Tüm saha personeli'}
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-800/60">
+                <div className="text-[11px] font-semibold text-blue-800 dark:text-blue-300 uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <span>{language === 'en' ? 'Mobile Phone Logins' : 'Mobil Telefon Girişleri'}</span>
+                  <Smartphone className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <p className="text-2xl font-bold text-blue-900 dark:text-blue-100 font-mono tabular-nums">
+                  {mobileLoginsCount}
+                </p>
+                <p className="text-[11px] text-blue-700 dark:text-blue-400">
+                  %{Math.round((mobileLoginsCount / (loginLogs.length || 1)) * 100)} {language === 'en' ? 'mobile device share' : 'mobil cihaz oranı'}
+                </p>
+              </div>
+
+              <div className={`p-3.5 rounded-xl border ${
+                differentDeviceAlertsCount > 0
+                  ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700/70'
+                  : 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-800/60'
+              }`}>
+                <div className="text-[11px] font-semibold uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <span className={differentDeviceAlertsCount > 0 ? 'text-amber-900 dark:text-amber-200 font-bold' : 'text-emerald-800 dark:text-emerald-300'}>
+                    {language === 'en' ? 'Different Device Alerts' : 'Farklı Cihaz Uyarıları'}
+                  </span>
+                  <ShieldAlert className={`w-3.5 h-3.5 ${differentDeviceAlertsCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`} />
+                </div>
+                <p className={`text-2xl font-bold font-mono tabular-nums ${
+                  differentDeviceAlertsCount > 0 ? 'text-amber-900 dark:text-amber-100' : 'text-emerald-900 dark:text-emerald-100'
+                }`}>
+                  {differentDeviceAlertsCount}
+                </p>
+                <p className={`text-[11px] ${
+                  differentDeviceAlertsCount > 0 ? 'text-amber-800 dark:text-amber-300 font-medium' : 'text-emerald-700 dark:text-emerald-400'
+                }`}>
+                  {differentDeviceAlertsCount > 0
+                    ? (language === 'en' ? '⚠️ Attention: New device detected!' : '⚠️ Dikkat: Farklı cihaz tespiti yapıldı!')
+                    : (language === 'en' ? '✅ All logins from recognized devices' : '✅ Tüm girişler kayıtlı cihazlardan')}
+                </p>
+              </div>
+            </div>
+
+            {/* Filter and Search Bar */}
+            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="relative flex-1 max-w-md">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  value={auditSearch}
+                  onChange={(e) => setAuditSearch(e.target.value)}
+                  placeholder={language === 'en' ? 'Search technician, email, iPhone, Samsung...' : 'Personel, e-posta, iPhone veya Samsung ara...'}
+                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:outline-hidden focus:ring-2 focus:ring-blue-500 font-medium"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                <button
+                  onClick={() => setAuditFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
+                    auditFilter === 'all'
+                      ? 'bg-slate-900 dark:bg-blue-600 text-white'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {language === 'en' ? 'All' : 'Tümü'} ({loginLogs.length})
+                </button>
+
+                <button
+                  onClick={() => setAuditFilter('different_only')}
+                  className={`px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1 cursor-pointer ${
+                    auditFilter === 'different_only'
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-slate-100 dark:bg-slate-800 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40'
+                  }`}
+                >
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span>{language === 'en' ? 'Different Devices Only' : 'Farklı Cihazlar'} ({differentDeviceAlertsCount})</span>
+                </button>
+
+                <button
+                  onClick={() => setAuditFilter('mobile_only')}
+                  className={`px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1 cursor-pointer ${
+                    auditFilter === 'mobile_only'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  <Smartphone className="w-3.5 h-3.5" />
+                  <span>{language === 'en' ? 'Mobile Only' : 'Sadece Mobil'} ({mobileLoginsCount})</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Audit Logs Table */}
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden">
+            {filteredLogs.length === 0 ? (
+              <div className="p-12 text-center">
+                <ShieldCheck className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                  {language === 'en' ? 'No Login Logs Found' : 'Giriş Kaydı Bulunamadı'}
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {language === 'en'
+                    ? 'As technicians log in from their phones and computers, entries will automatically appear here.'
+                    : 'Personeller telefon veya bilgisayarlarından giriş yaptıkça kayıtlar anında burada listelenir.'}
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">
+                    <tr>
+                      <th className="py-3.5 px-4">{language === 'en' ? 'Technician / User' : 'Personel / Kullanıcı'}</th>
+                      <th className="py-3.5 px-4">{language === 'en' ? 'Login Timestamp' : 'Giriş Zamanı'}</th>
+                      <th className="py-3.5 px-4">{language === 'en' ? 'Hardware & Device Model' : 'Kullanılan Cihaz & Model'}</th>
+                      <th className="py-3.5 px-4">{language === 'en' ? 'Browser & Screen' : 'Tarayıcı & Çözünürlük'}</th>
+                      <th className="py-3.5 px-4 text-right">{language === 'en' ? 'Device Integrity Status' : 'Cihaz Doğrulama Durumu'}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {filteredLogs.map((log) => {
+                      const { dateStr, relative } = formatLogTime(log.timestamp);
+                      const isMobile = log.deviceType === 'mobile';
+                      const isTablet = log.deviceType === 'tablet';
+
+                      return (
+                        <tr
+                          key={log.id}
+                          className={`transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/40 ${
+                            log.isDifferentDevice ? 'bg-amber-50/40 dark:bg-amber-950/20' : ''
+                          }`}
+                        >
+                          {/* 1. Technician Details */}
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-xs">
+                                {log.userName.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <p className="font-bold text-slate-900 dark:text-white leading-tight">
+                                  {log.userName}
+                                </p>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                                  {log.userEmail}
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* 2. Login Timestamp */}
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-1.5 text-slate-900 dark:text-slate-200 font-mono font-medium">
+                              <Clock className="w-3.5 h-3.5 text-slate-400" />
+                              <span>{dateStr}</span>
+                            </div>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 ml-5 block">
+                              {relative}
+                            </span>
+                          </td>
+
+                          {/* 3. Device & Hardware Model */}
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <div className={`p-1.5 rounded-lg shrink-0 ${
+                                isMobile
+                                  ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400'
+                                  : isTablet
+                                  ? 'bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400'
+                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                              }`}>
+                                {isMobile ? <Smartphone className="w-4 h-4" /> : isTablet ? <Tablet className="w-4 h-4" /> : <Laptop className="w-4 h-4" />}
+                              </div>
+                              <div>
+                                <p className="font-bold text-slate-900 dark:text-white leading-tight">
+                                  {log.deviceName}
+                                </p>
+                                <span className={`text-[10px] font-semibold uppercase tracking-wider ${
+                                  isMobile ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400'
+                                }`}>
+                                  {isMobile ? 'Mobil Telefon (Mobile)' : isTablet ? 'Tablet' : 'Masaüstü (Desktop)'}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* 4. Browser & Screen */}
+                          <td className="py-3 px-4">
+                            <p className="text-slate-700 dark:text-slate-300 font-medium leading-tight">
+                              {log.browser}
+                            </p>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono block">
+                              {log.screenResolution || 'Standart Ekran'}
+                            </span>
+                          </td>
+
+                          {/* 5. Device Verification Status (Farklı Telefon / Normal Cihaz) */}
+                          <td className="py-3 px-4 text-right">
+                            {log.isDifferentDevice ? (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 border border-amber-300 dark:border-amber-700 text-xs font-bold shadow-xs animate-pulse">
+                                <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                                <span>{language === 'en' ? '⚠️ Different Mobile Phone Used!' : '⚠️ Farklı Mobil Telefon Kullanıldı!'}</span>
+                              </div>
+                            ) : (
+                              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800 text-xs font-semibold shadow-xs">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                <span>{language === 'en' ? 'Recognized Device' : 'Kayıtlı / Normal Cihaz'}</span>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 5. Add Member Modal */}
       {isAddMemberOpen && (

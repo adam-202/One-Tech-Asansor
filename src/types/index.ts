@@ -98,3 +98,18 @@ export interface RouteStop {
   isOrigin?: boolean;
 }
 
+export interface LoginAuditLog {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  role: string;
+  timestamp: string; // ISO string
+  deviceType: 'mobile' | 'tablet' | 'desktop';
+  deviceName: string; // e.g. "Apple iPhone", "Samsung Galaxy", "Windows PC"
+  browser: string; // e.g. "Safari Mobile", "Chrome", "Firefox"
+  screenResolution: string; // e.g. "390x844"
+  deviceFingerprint: string; // persistent device UUID
+  isDifferentDevice: boolean; // true if this user logged in from an unrecognized device
+}
+
