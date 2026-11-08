@@ -5,6 +5,11 @@ import { BuildingSite, Technician, VisitRecord } from '../types';
 function mapDbSiteToModel(row: any, visits: VisitRecord[] = []): BuildingSite {
   const siteVisits = visits.filter((v) => v.siteId === row.id);
   const lastVisit = row.last_visit || (siteVisits.length > 0 ? siteVisits[0] : undefined);
+  const rawAssigned = row.assigned_technician_email || 'adam.osama60@gmail.com';
+  const assignedEmails = rawAssigned
+    .split(',')
+    .map((e: string) => e.trim())
+    .filter(Boolean);
 
   return {
     id: row.id,
@@ -18,7 +23,8 @@ function mapDbSiteToModel(row: any, visits: VisitRecord[] = []): BuildingSite {
     elevatorUnits: row.elevator_units !== null && row.elevator_units !== undefined ? Number(row.elevator_units) : null,
     elevatorBrand: row.elevator_brand || 'KONE',
     elevatorNumbers: row.elevator_numbers || '',
-    assignedTechnicianEmail: row.assigned_technician_email || 'adam.osama60@gmail.com',
+    assignedTechnicianEmail: rawAssigned,
+    assignedTechnicianEmails: assignedEmails,
     managerName: row.manager_name || '',
     managerPhone: row.manager_phone || '',
     accessCode: row.access_code || '',
@@ -32,6 +38,11 @@ function mapDbSiteToModel(row: any, visits: VisitRecord[] = []): BuildingSite {
 
 // Convert BuildingSite model to DB row
 function mapModelToDbSite(site: BuildingSite): any {
+  const assignedEmailStr =
+    Array.isArray(site.assignedTechnicianEmails) && site.assignedTechnicianEmails.length > 0
+      ? Array.from(new Set(site.assignedTechnicianEmails.map((e) => e.trim()).filter(Boolean))).join(', ')
+      : (site.assignedTechnicianEmail || 'adam.osama60@gmail.com');
+
   return {
     id: site.id,
     name: site.name,
@@ -44,7 +55,7 @@ function mapModelToDbSite(site: BuildingSite): any {
     elevator_units: site.elevatorUnits,
     elevator_brand: site.elevatorBrand,
     elevator_numbers: site.elevatorNumbers || '',
-    assigned_technician_email: site.assignedTechnicianEmail,
+    assigned_technician_email: assignedEmailStr,
     manager_name: site.managerName || '',
     manager_phone: site.managerPhone || '',
     access_code: site.accessCode || '',

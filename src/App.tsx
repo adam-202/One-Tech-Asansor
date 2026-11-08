@@ -21,6 +21,12 @@ import { CheckCircle2, RotateCcw } from 'lucide-react';
 import { Language, translations } from './utils/translations';
 import { isSupabaseConfigured, testSupabaseConnection } from './utils/supabase';
 import {
+  normalizeEmail,
+  getSiteAssignedEmails,
+  isSiteAssignedTo,
+  formatAssignedEmails,
+} from './utils/assignment';
+import {
   fetchSitesFromSupabase,
   fetchTechniciansFromSupabase,
   upsertSiteToSupabase,
@@ -234,6 +240,15 @@ export default function App() {
     authenticatedUser?.name.toLowerCase().includes('adam')
   );
 
+  // Security guard: Only Admin has permission to switch between member accounts
+  const handleSelectTechnician = (tech: Technician) => {
+    if (!isAdmin) {
+      console.warn('Access denied: Only Admins can switch between member accounts.');
+      return;
+    }
+    setCurrentTechnician(tech);
+  };
+
   const handleLoginSuccess = (user: Technician) => {
     setAuthenticatedUser(user);
     setCurrentTechnician(user);
@@ -327,7 +342,7 @@ export default function App() {
     }
   };
 
-  // Delete Member & safely reassign their sites to Adam
+  // Delete Member & safely reassign their sites to remaining members or Adam
   const handleDeleteTechnician = (techId: string) => {
     const targetTech = technicians.find((t) => t.id === techId);
     setTechnicians((prev) => prev.filter((t) => t.id !== techId));
@@ -336,10 +351,18 @@ export default function App() {
     }
 
     if (targetTech) {
+      const cleanTarget = normalizeEmail(targetTech.email);
       setSites((prev) =>
         prev.map((s) => {
-          if (s.assignedTechnicianEmail === targetTech.email) {
-            const reallocated = { ...s, assignedTechnicianEmail: 'adam.osama60@gmail.com' };
+          const current = getSiteAssignedEmails(s);
+          if (current.includes(cleanTarget)) {
+            const remaining = current.filter((e) => e !== cleanTarget);
+            const fallback = remaining.length > 0 ? remaining : ['adam.osama60@gmail.com'];
+            const reallocated: BuildingSite = {
+              ...s,
+              assignedTechnicianEmail: formatAssignedEmails(fallback),
+              assignedTechnicianEmails: fallback,
+            };
             if (isSupabaseConnected) {
               upsertSiteToSupabase(reallocated);
             }
@@ -379,18 +402,73 @@ export default function App() {
     );
   };
 
-  // Batch reassign sites to a specific technician
-  const handleBatchReassign = (targetEmail: string, siteIds: string[]) => {
+  // Batch assign/reassign sites to a specific technician (supporting multi-member allocation)
+  const handleBatchReassign = (
+    targetEmail: string,
+    siteIds: string[],
+    mode: 'add' | 'replace' = 'add'
+  ) => {
+    const cleanTarget = normalizeEmail(targetEmail);
     setSites((prev) =>
       prev.map((s) => {
         if (siteIds.includes(s.id)) {
-          const updated = { ...s, assignedTechnicianEmail: targetEmail };
+          let updatedEmails: string[];
+          if (mode === 'add') {
+            const current = getSiteAssignedEmails(s);
+            updatedEmails = Array.from(new Set([...current, cleanTarget])).filter(Boolean);
+          } else {
+            updatedEmails = [cleanTarget].filter(Boolean);
+          }
+          const updated: BuildingSite = {
+            ...s,
+            assignedTechnicianEmail: formatAssignedEmails(updatedEmails),
+            assignedTechnicianEmails: updatedEmails,
+          };
           if (isSupabaseConnected) {
             upsertSiteToSupabase(updated);
           }
           return updated;
         }
         return s;
+      })
+    );
+  };
+
+  // Save multi-member building allocations for a specific technician (add/remove from portfolio)
+  const handleBatchSaveAllocations = (techEmail: string, targetSiteIds: string[]) => {
+    const cleanTech = normalizeEmail(techEmail);
+    setSites((prev) =>
+      prev.map((s) => {
+        const isNowAssigned = targetSiteIds.includes(s.id);
+        const currentEmails = getSiteAssignedEmails(s);
+        const hadTech = currentEmails.includes(cleanTech);
+
+        if (isNowAssigned === hadTech) {
+          return s; // no change
+        }
+
+        let updatedEmails: string[];
+        if (isNowAssigned) {
+          // ADD this technician while keeping other assigned members
+          updatedEmails = Array.from(new Set([...currentEmails, cleanTech])).filter(Boolean);
+        } else {
+          // REMOVE this technician while keeping other assigned members
+          updatedEmails = currentEmails.filter((e) => e !== cleanTech);
+          if (updatedEmails.length === 0) {
+            updatedEmails = ['adam.osama60@gmail.com'];
+          }
+        }
+
+        const updated: BuildingSite = {
+          ...s,
+          assignedTechnicianEmail: formatAssignedEmails(updatedEmails),
+          assignedTechnicianEmails: updatedEmails,
+        };
+
+        if (isSupabaseConnected) {
+          upsertSiteToSupabase(updated);
+        }
+        return updated;
       })
     );
   };
@@ -491,18 +569,28 @@ export default function App() {
   // Reassign single site
   const handleReassignSite = (siteId: string, newEmail: string) => {
     const targetTech = technicians.find((t) => t.email === newEmail);
+    const cleanTarget = normalizeEmail(newEmail);
+    let updatedSite: BuildingSite | null = null;
     setSites((prev) =>
       prev.map((s) => {
         if (s.id === siteId) {
-          return { ...s, assignedTechnicianEmail: newEmail };
+          updatedSite = {
+            ...s,
+            assignedTechnicianEmail: newEmail,
+            assignedTechnicianEmails: [cleanTarget],
+          };
+          return updatedSite;
         }
         return s;
       })
     );
+    if (isSupabaseConnected && updatedSite) {
+      upsertSiteToSupabase(updatedSite);
+    }
     showToast(
       language === 'en'
-        ? `Reassigned site to ${targetTech?.name || newEmail}.`
-        : `Bina ${targetTech?.name || newEmail} teknisyenine devredildi.`
+        ? `Reassigned to ${targetTech?.name || newEmail}`
+        : `${targetTech?.name || newEmail} adlı teknisyene atandı`
     );
   };
 
@@ -582,7 +670,7 @@ export default function App() {
         onSelectTab={setActiveTab}
         technicians={technicians}
         currentTechnician={currentTechnician}
-        onSelectTechnician={setCurrentTechnician}
+        onSelectTechnician={handleSelectTechnician}
         language={language}
         onToggleLanguage={toggleLanguage}
         theme={theme}
@@ -639,7 +727,7 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'admin' && (
+        {activeTab === 'admin' && isAdmin && (
           <AdminPortal
             sites={sites}
             technicians={technicians}
@@ -648,6 +736,7 @@ export default function App() {
             onUpdateSite={handleSaveSite}
             onDeleteSite={handleDeleteSite}
             onBatchReassign={handleBatchReassign}
+            onBatchSaveAllocations={handleBatchSaveAllocations}
             onAddTechnician={handleAddTechnician}
             onUpdateTechnician={handleUpdateTechnician}
             onDeleteTechnician={handleDeleteTechnician}

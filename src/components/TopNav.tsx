@@ -256,42 +256,66 @@ export const TopNav: React.FC<TopNavProps> = ({
                     onClick={() => setTechDropdownOpen(false)}
                   />
                   <div className="absolute right-0 mt-2 w-64 dark:bg-slate-900 bg-white dark:border-slate-800 border-slate-200 rounded-2xl shadow-2xl py-1.5 z-50 dark:text-slate-200 text-slate-800 animate-fadeIn">
-                    <div className="px-3 py-2 border-b dark:border-slate-800 border-slate-100 text-[11px] font-semibold uppercase tracking-wider dark:text-slate-400 text-slate-500">
-                      {t.switchProfile}
-                    </div>
+                    {isAdmin ? (
+                      <>
+                        <div className="px-3 py-2 border-b dark:border-slate-800 border-slate-100 text-[11px] font-semibold uppercase tracking-wider dark:text-slate-400 text-slate-500">
+                          {t.switchProfile}
+                        </div>
 
-                    <div className="max-h-60 overflow-y-auto py-1">
-                      {technicians.map((tech) => {
-                        const isCurrent = tech.id === currentTechnician.id;
-                        return (
-                          <button
-                            key={tech.id}
-                            onClick={() => {
-                              onSelectTechnician(tech);
-                              setTechDropdownOpen(false);
-                            }}
-                            className={`w-full flex items-center justify-between px-3 py-2 text-xs transition-colors cursor-pointer ${
-                              isCurrent
-                                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold'
-                                : 'dark:hover:bg-slate-800/80 hover:bg-slate-50 dark:text-slate-300 text-slate-700'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 overflow-hidden">
-                              <div className={`w-6 h-6 rounded-md ${tech.avatarColor || 'bg-blue-600'} text-white flex items-center justify-center font-bold text-[10px] shrink-0`}>
-                                {tech.name[0]}
-                              </div>
-                              <div className="text-left truncate">
-                                <div className="truncate font-medium">{tech.name}</div>
-                                <div className="text-[10px] dark:text-slate-500 text-slate-400 font-mono truncate">
-                                  {tech.role}
+                        <div className="max-h-60 overflow-y-auto py-1">
+                          {technicians.map((tech) => {
+                            const isCurrent = tech.id === currentTechnician.id;
+                            return (
+                              <button
+                                key={tech.id}
+                                onClick={() => {
+                                  onSelectTechnician(tech);
+                                  setTechDropdownOpen(false);
+                                }}
+                                className={`w-full flex items-center justify-between px-3 py-2 text-xs transition-colors cursor-pointer ${
+                                  isCurrent
+                                    ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold'
+                                    : 'dark:hover:bg-slate-800/80 hover:bg-slate-50 dark:text-slate-300 text-slate-700'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                  <div className={`w-6 h-6 rounded-md ${tech.avatarColor || 'bg-blue-600'} text-white flex items-center justify-center font-bold text-[10px] shrink-0`}>
+                                    {tech.name[0]}
+                                  </div>
+                                  <div className="text-left truncate">
+                                    <div className="truncate font-medium">{tech.name}</div>
+                                    <div className="text-[10px] dark:text-slate-500 text-slate-400 font-mono truncate">
+                                      {tech.role}
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
+                                {isCurrent && <Check className="w-4 h-4 text-blue-500 shrink-0 ml-2" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="p-3 border-b dark:border-slate-800 border-slate-100">
+                        <div className="flex items-center gap-2.5 mb-2">
+                          <div className={`w-9 h-9 rounded-xl ${currentTechnician.avatarColor || 'bg-emerald-600'} text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs`}>
+                            {currentTechnician.name[0]}
+                          </div>
+                          <div className="overflow-hidden">
+                            <div className="font-bold text-xs dark:text-white text-slate-900 truncate">
+                              {currentTechnician.name}
                             </div>
-                            {isCurrent && <Check className="w-4 h-4 text-blue-500 shrink-0 ml-2" />}
-                          </button>
-                        );
-                      })}
-                    </div>
+                            <div className="text-[10px] dark:text-slate-400 text-slate-500 font-mono truncate">
+                              {currentTechnician.email}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          <span>{language === 'tr' ? 'Teknisyen Hesabı' : 'Technician Account'}</span>
+                        </div>
+                      </div>
+                    )}
 
                     {onLogout && (
                       <div className="pt-1 mt-1 border-t dark:border-slate-800 border-slate-100">

@@ -26,6 +26,7 @@ import {
   ReportPeriod,
   ReportSummaryData,
 } from '../utils/exportReport';
+import { isSiteAssignedTo } from '../utils/assignment';
 
 interface ReportsViewProps {
   sites: BuildingSite[];
@@ -50,7 +51,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
   // Filter sites for the selected report target
   const targetSites = useMemo(() => {
     if (selectedTechEmail === 'all') return sites;
-    return sites.filter((s) => s.assignedTechnicianEmail === selectedTechEmail);
+    return sites.filter((s) => isSiteAssignedTo(s, selectedTechEmail));
   }, [sites, selectedTechEmail]);
 
   const visitedSites = useMemo(() => {
@@ -236,7 +237,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {activeTechnicians.map((tech) => {
-            const techSites = sites.filter((s) => s.assignedTechnicianEmail === tech.email);
+            const techSites = sites.filter((s) => isSiteAssignedTo(s, tech.email));
             const techVisited = techSites.filter((s) => s.lastVisit).length;
             const techRate = techSites.length > 0 ? (techVisited / techSites.length) * 100 : 0;
 

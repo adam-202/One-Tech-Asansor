@@ -18,8 +18,14 @@ import {
   Cable,
   Cpu,
   ChevronLeft,
+  Check,
 } from 'lucide-react';
 import { Language, translations } from '../utils/translations';
+import {
+  normalizeEmail,
+  getSiteAssignedEmails,
+  formatAssignedEmails,
+} from '../utils/assignment';
 
 interface SiteModalProps {
   isOpen: boolean;
@@ -74,6 +80,7 @@ export const SiteModal: React.FC<SiteModalProps> = ({
   const [elevatorUnits, setElevatorUnits] = useState<number>(2);
   const [elevatorBrand, setElevatorBrand] = useState(ELEVATOR_BRANDS[0]);
   const [assignedEmail, setAssignedEmail] = useState(currentTechnicianEmail);
+  const [assignedEmails, setAssignedEmails] = useState<string[]>([normalizeEmail(currentTechnicianEmail)]);
   const [managerName, setManagerName] = useState('');
   const [managerPhone, setManagerPhone] = useState('');
   const [accessCode, setAccessCode] = useState('');
@@ -146,6 +153,8 @@ export const SiteModal: React.FC<SiteModalProps> = ({
       setFloors(siteToEdit.floors ?? 6);
       setElevatorUnits(siteToEdit.elevatorUnits ?? 1);
       setElevatorBrand(siteToEdit.elevatorBrand);
+      const loadedEmails = getSiteAssignedEmails(siteToEdit);
+      setAssignedEmails(loadedEmails.length > 0 ? loadedEmails : [normalizeEmail(currentTechnicianEmail)]);
       setAssignedEmail(siteToEdit.assignedTechnicianEmail);
       setManagerName(siteToEdit.managerName || '');
       setManagerPhone(siteToEdit.managerPhone || '');
@@ -167,6 +176,7 @@ export const SiteModal: React.FC<SiteModalProps> = ({
       setFloors(6);
       setElevatorUnits(2);
       setElevatorBrand(ELEVATOR_BRANDS[0]);
+      setAssignedEmails([normalizeEmail(currentTechnicianEmail)]);
       setAssignedEmail(currentTechnicianEmail);
       setManagerName('');
       setManagerPhone('');
@@ -220,6 +230,19 @@ export const SiteModal: React.FC<SiteModalProps> = ({
     setSpareParts((prev) => prev.filter((item) => item.id !== id));
   };
 
+  const toggleTechnicianAssignment = (email: string) => {
+    const norm = normalizeEmail(email);
+    setAssignedEmails((prev) => {
+      const exists = prev.some((e) => normalizeEmail(e) === norm);
+      if (exists) {
+        if (prev.length <= 1) return prev; // Keep at least one technician assigned
+        return prev.filter((e) => normalizeEmail(e) !== norm);
+      } else {
+        return [...prev, norm];
+      }
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -232,6 +255,13 @@ export const SiteModal: React.FC<SiteModalProps> = ({
     // Filter out empty rows
     const cleanedParts = spareParts.filter((p) => p.partName.trim().length > 0 || p.quantity.trim().length > 0);
 
+    const finalEmails = assignedEmails.length > 0
+      ? assignedEmails.map(normalizeEmail)
+      : [normalizeEmail(currentTechnicianEmail)];
+    const assignedFormatted = category === 'public'
+      ? 'shared@onetechasansor.com'
+      : formatAssignedEmails(finalEmails);
+
     const saved: BuildingSite = {
       id: siteToEdit?.id || `site-tr-${Date.now().toString().slice(-4)}`,
       name: name.trim(),
@@ -243,7 +273,8 @@ export const SiteModal: React.FC<SiteModalProps> = ({
       floors: Number(floors) || 5,
       elevatorUnits: Number(elevatorUnits) || 1,
       elevatorBrand,
-      assignedTechnicianEmail: category === 'public' ? 'shared@onetechasansor.com' : assignedEmail,
+      assignedTechnicianEmail: assignedFormatted,
+      assignedTechnicianEmails: category === 'public' ? ['shared@onetechasansor.com'] : finalEmails,
       managerName: managerName.trim(),
       managerPhone: managerPhone.trim(),
       accessCode: accessCode.trim(),
@@ -607,36 +638,58 @@ export const SiteModal: React.FC<SiteModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {t.tableColAssigned}
+          {/* Member / Technician Allocation */}
+          <div className="p-3.5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40">
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                {language === 'tr' ? 'Binaya Atanan Üyeler (Çoklu Seçim)' : 'Assigned Members (Multi-Member)'}
               </label>
-              <select
-                value={assignedEmail}
-                onChange={(e) => setAssignedEmail(e.target.value)}
-                className="w-full text-xs p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:border-blue-500 outline-hidden"
-              >
-                {technicians.map((tech) => (
-                  <option key={tech.id} value={tech.email}>
-                    {tech.name} ({tech.email})
-                  </option>
-                ))}
-              </select>
+              <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+                {assignedEmails.length} {language === 'tr' ? 'üye atandı' : 'assigned'}
+              </span>
             </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-2.5">
+              {language === 'tr'
+                ? 'Aynı bina birden fazla üyeye aynı anda atanabilir. Üyeleri dahil etmek veya çıkarmak için tıklayın.'
+                : 'The same building can be assigned to several members simultaneously. Click to toggle.'}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {technicians.map((tech) => {
+                const isAssigned = assignedEmails.some((e) => normalizeEmail(e) === normalizeEmail(tech.email));
+                return (
+                  <button
+                    key={tech.id}
+                    type="button"
+                    onClick={() => toggleTechnicianAssignment(tech.email)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                      isAssigned
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:border-blue-400'
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${isAssigned ? 'bg-white' : 'bg-slate-400'}`} />
+                    <span>{tech.name}</span>
+                    <span className={`text-[10px] ${isAssigned ? 'text-blue-100' : 'text-slate-400'}`}>
+                      ({tech.role === 'admin' ? (language === 'tr' ? 'Yönetici' : 'Admin') : (language === 'tr' ? 'Teknisyen' : 'Tech')})
+                    </span>
+                    {isAssigned && <Check className="w-3.5 h-3.5 ml-0.5" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {t.googleMapsUrlLabel}
-              </label>
-              <input
-                type="text"
-                value={googleMapsUrl}
-                onChange={(e) => setGoogleMapsUrl(e.target.value)}
-                placeholder="https://maps.google.com/..."
-                className="w-full text-xs p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:border-blue-500 outline-hidden font-mono"
-              />
-            </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+              {t.googleMapsUrlLabel}
+            </label>
+            <input
+              type="text"
+              value={googleMapsUrl}
+              onChange={(e) => setGoogleMapsUrl(e.target.value)}
+              placeholder="https://maps.google.com/..."
+              className="w-full text-xs p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:border-blue-500 outline-hidden font-mono"
+            />
           </div>
 
           {/* Footer Actions */}

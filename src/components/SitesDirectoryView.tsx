@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { exportSitesToCsv } from '../utils/exportReport';
 import { buildSingleSiteMapUrl } from '../utils/geo';
+import { isSiteAssignedTo, getAssignedTechnicians } from '../utils/assignment';
 import { SiteMapIcon } from './SiteMapIcon';
 import { LocationPreviewModal } from './LocationPreviewModal';
 import { BatchImportModal } from './BatchImportModal';
@@ -141,10 +142,10 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
         }
 
         // Technician Filter
-        if (techFilter === 'mine' && site.assignedTechnicianEmail !== currentTechnician.email) {
+        if (techFilter === 'mine' && !isSiteAssignedTo(site, currentTechnician.email)) {
           return false;
         }
-        if (techFilter !== 'all' && techFilter !== 'mine' && site.assignedTechnicianEmail !== techFilter) {
+        if (techFilter !== 'all' && techFilter !== 'mine' && !isSiteAssignedTo(site, techFilter)) {
           return false;
         }
 
@@ -178,7 +179,7 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
     (s) => s.lastVisit && s.lastVisit.status !== 'passed'
   ).length;
   const myAssignedCount = sites.filter(
-    (s) => s.assignedTechnicianEmail === currentTechnician.email
+    (s) => isSiteAssignedTo(s, currentTechnician.email)
   ).length;
 
   const isAnyFilterActive =
@@ -388,7 +389,7 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
                 <option value="all">All Technicians ({activeTechnicians.length})</option>
                 <option value="mine">Assigned to Me ({currentTechnician.name})</option>
                 {activeTechnicians.map((t) => {
-                  const count = sites.filter((s) => s.assignedTechnicianEmail === t.email).length;
+                  const count = sites.filter((s) => isSiteAssignedTo(s, t.email)).length;
                   return (
                     <option key={t.id} value={t.email}>
                       {t.name} ({count} sites)
@@ -584,7 +585,7 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
           {filteredSites.map((site) => {
             const isVisited = Boolean(site.lastVisit);
             const visit = site.lastVisit;
-            const assignedTech = activeTechnicians.find((t) => t.email === site.assignedTechnicianEmail);
+            const assignedTechs = getAssignedTechnicians(site, activeTechnicians);
             const brandBadgeStyle = getBrandBadge(site.elevatorBrand);
 
             return (
@@ -672,14 +673,25 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
 
                 {/* Bottom Row: Technician & Action Buttons */}
                 <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 truncate">
-                    {assignedTech ? (
+                  <div className="flex items-center gap-1.5 truncate max-w-[190px]">
+                    {assignedTechs.length > 0 ? (
                       <>
-                        <div className={`w-6 h-6 rounded-full ${assignedTech.avatarColor || 'bg-blue-600'} text-white text-[10px] font-bold flex items-center justify-center shrink-0`}>
-                          {assignedTech.name[0]}
+                        <div className="flex -space-x-1.5 overflow-hidden shrink-0">
+                          {assignedTechs.map((tech) => (
+                            <div
+                              key={tech.id}
+                              className={`w-6 h-6 rounded-full ${tech.avatarColor || 'bg-blue-600'} text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900`}
+                              title={`${tech.name} (${tech.email})`}
+                            >
+                              {tech.name[0]}
+                            </div>
+                          ))}
                         </div>
-                        <span className="text-xs text-slate-700 dark:text-slate-300 font-medium truncate">
-                          {assignedTech.name.split(' ')[0]}
+                        <span
+                          className="text-xs text-slate-700 dark:text-slate-300 font-medium truncate"
+                          title={assignedTechs.map((t) => t.name).join(', ')}
+                        >
+                          {assignedTechs.map((t) => t.name.split(' ')[0]).join(', ')}
                         </span>
                       </>
                     ) : (
@@ -721,7 +733,7 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
           {filteredSites.map((site) => {
             const isVisited = Boolean(site.lastVisit);
             const visit = site.lastVisit;
-            const assignedTech = activeTechnicians.find((t) => t.email === site.assignedTechnicianEmail);
+            const assignedTechs = getAssignedTechnicians(site, activeTechnicians);
 
             return (
               <div
@@ -815,6 +827,15 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
                         <span className="text-slate-400 text-[11px]">
                           {t.managerContact}: {t.notSpecified}
                         </span>
+                      )}
+                      <span aria-hidden="true">•</span>
+                      {assignedTechs.length > 0 ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                          <User className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                          <span>{assignedTechs.map((t) => t.name).join(', ')}</span>
+                        </span>
+                      ) : (
+                        <span className="text-slate-400 text-[11px] italic">Unassigned</span>
                       )}
                     </div>
 

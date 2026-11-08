@@ -7,6 +7,7 @@ import {
   buildGoogleMapsRouteUrl,
   buildSingleSiteMapUrl,
 } from '../utils/geo';
+import { isSiteAssignedTo } from '../utils/assignment';
 import { InteractiveRealMap } from './InteractiveRealMap';
 import {
   Sparkles,
@@ -118,7 +119,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
   // Filter pool of candidate sites based on technician assignment and neighborhood
   const candidateSites = useMemo(() => {
     return sites.filter((site) => {
-      if (onlyMySites && site.assignedTechnicianEmail !== currentTechnician.email) {
+      if (onlyMySites && !isSiteAssignedTo(site, currentTechnician.email)) {
         return false;
       }
       if (selectedNeighborhood !== 'All' && site.neighborhood !== selectedNeighborhood) {

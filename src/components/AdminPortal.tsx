@@ -32,6 +32,12 @@ import {
 } from 'lucide-react';
 import { exportSitesToCsv } from '../utils/exportReport';
 import { Language, translations } from '../utils/translations';
+import {
+  normalizeEmail,
+  getSiteAssignedEmails,
+  isSiteAssignedTo,
+  getAssignedTechnicians,
+} from '../utils/assignment';
 
 interface AdminPortalProps {
   sites: BuildingSite[];
@@ -40,7 +46,8 @@ interface AdminPortalProps {
   language: Language;
   onUpdateSite: (site: BuildingSite) => void;
   onDeleteSite: (siteId: string) => void;
-  onBatchReassign: (targetEmail: string, siteIds: string[]) => void;
+  onBatchReassign: (targetEmail: string, siteIds: string[], mode?: 'add' | 'replace') => void;
+  onBatchSaveAllocations?: (techEmail: string, assignedSiteIds: string[]) => void;
   onAddTechnician: (tech: Technician) => void;
   onUpdateTechnician?: (tech: Technician) => void;
   onDeleteTechnician: (techId: string) => void;
@@ -56,6 +63,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   onUpdateSite,
   onDeleteSite,
   onBatchReassign,
+  onBatchSaveAllocations,
   onAddTechnician,
   onUpdateTechnician,
   onDeleteTechnician,
@@ -120,7 +128,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   }, [isAddMemberOpen, editingTech, assigningTech, resettingTech]);
 
   const filteredSites = sites.filter((s) => {
-    if (selectedTechFilter !== 'all' && s.assignedTechnicianEmail !== selectedTechFilter) return false;
+    if (selectedTechFilter !== 'all' && !isSiteAssignedTo(s, selectedTechFilter)) return false;
     if (search) {
       const q = search.toLowerCase();
       return (
@@ -147,13 +155,17 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     );
   };
 
-  const handleApplyReassignment = () => {
+  const handleApplyReassignment = (mode: 'add' | 'replace' = 'add') => {
     if (selectedSiteIds.length === 0) return;
-    onBatchReassign(reassignToEmail, selectedSiteIds);
+    onBatchReassign(reassignToEmail, selectedSiteIds, mode);
     const targetTech = technicians.find((tech) => tech.email === reassignToEmail);
-    const msg = language === 'en'
-      ? `Successfully reassigned ${selectedSiteIds.length} buildings to ${targetTech?.name || reassignToEmail}.`
-      : `${selectedSiteIds.length} bina ${targetTech?.name || reassignToEmail} teknisyenine başarıyla devredildi.`;
+    const msg = mode === 'add'
+      ? (language === 'en'
+          ? `Added ${targetTech?.name || reassignToEmail} to ${selectedSiteIds.length} buildings (existing members preserved).`
+          : `${selectedSiteIds.length} binaya ${targetTech?.name || reassignToEmail} başarıyla eklendi (diğer üyeler korundu).`)
+      : (language === 'en'
+          ? `Reassigned ${selectedSiteIds.length} buildings exclusively to ${targetTech?.name || reassignToEmail}.`
+          : `${selectedSiteIds.length} bina sadece ${targetTech?.name || reassignToEmail} teknisyenine devredildi.`);
     setSuccessToast(msg);
     setSelectedSiteIds([]);
     setTimeout(() => setSuccessToast(null), 3500);
@@ -252,7 +264,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
   const handleOpenAssignSites = (tech: Technician) => {
     setAssigningTech(tech);
     const currentIds = sites
-      .filter((s) => s.assignedTechnicianEmail === tech.email)
+      .filter((s) => isSiteAssignedTo(s, tech.email))
       .map((s) => s.id);
     setAssignedSiteIdsForModal(currentIds);
     setAssignModalSearch('');
@@ -282,39 +294,21 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
     );
   };
 
-  // Save all site assignments from modal
+  // Save all site assignments from modal (supports assigning same building to several members)
   const handleSaveAssignSites = () => {
     if (!assigningTech) return;
 
-    // Sites currently assigned to this tech in the main state
-    const previouslyAssigned = sites
-      .filter((s) => s.assignedTechnicianEmail === assigningTech.email)
-      .map((s) => s.id);
-
-    // Newly added to this tech
-    const addedSiteIds = assignedSiteIdsForModal.filter((id) => !previouslyAssigned.includes(id));
-    // Removed from this tech
-    const removedSiteIds = previouslyAssigned.filter((id) => !assignedSiteIdsForModal.includes(id));
-
-    // Assign newly added to this tech
-    if (addedSiteIds.length > 0) {
-      onBatchReassign(assigningTech.email, addedSiteIds);
-    }
-
-    // Return removed sites to Adam (or shared)
-    if (removedSiteIds.length > 0) {
-      const fallbackEmail =
-        assigningTech.email === 'adam.osama60@gmail.com'
-          ? 'shared@elevatortech.io'
-          : 'adam.osama60@gmail.com';
-      onBatchReassign(fallbackEmail, removedSiteIds);
+    if (onBatchSaveAllocations) {
+      onBatchSaveAllocations(assigningTech.email, assignedSiteIdsForModal);
+    } else {
+      onBatchReassign(assigningTech.email, assignedSiteIdsForModal, 'add');
     }
 
     const count = assignedSiteIdsForModal.length;
     setSuccessToast(
       language === 'en'
-        ? `Updated building allocations for ${assigningTech.name} (${count} buildings assigned)!`
-        : `${assigningTech.name} için bina atamaları güncellendi (${count} bina atandı)!`
+        ? `Building allocations saved for ${assigningTech.name} (${count} buildings assigned)!`
+        : `${assigningTech.name} için bina atamaları başarıyla kaydedildi (${count} bina atandı)!`
     );
     setAssigningTech(null);
     setTimeout(() => setSuccessToast(null), 3500);
@@ -464,7 +458,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {technicians.map((tech) => {
-            const techSites = sites.filter((s) => s.assignedTechnicianEmail === tech.email);
+            const techSites = sites.filter((s) => isSiteAssignedTo(s, tech.email));
             const visitedCount = techSites.filter((s) => Boolean(s.lastVisit)).length;
             const pct = techSites.length > 0 ? Math.round((visitedCount / techSites.length) * 100) : 0;
             const isDirector = tech.isAdmin || tech.email === 'adam.osama60@gmail.com' || tech.name.toLowerCase().includes('adam');
@@ -641,10 +635,20 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                 ))}
               </select>
               <button
-                onClick={handleApplyReassignment}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors cursor-pointer"
+                type="button"
+                onClick={() => handleApplyReassignment('add')}
+                className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors cursor-pointer text-xs"
+                title={language === 'tr' ? 'Seçili binalara bu teknisyeni de ekler (diğer teknisyenler kalır)' : 'Adds this tech to selected buildings (keeps other assigned members)'}
               >
-                {t.applyReassignment}
+                {language === 'tr' ? 'Üyelere Ekle' : 'Add to Members'}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleApplyReassignment('replace')}
+                className="px-2.5 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg font-semibold transition-colors cursor-pointer text-xs"
+                title={language === 'tr' ? 'Seçili binaları yalnızca bu teknisyene atar' : 'Reassigns exclusively to this technician'}
+              >
+                {language === 'tr' ? 'Tek Başına Ata' : 'Set Exclusively'}
               </button>
             </div>
           )}
@@ -712,7 +716,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 bg-white dark:bg-slate-900/60">
               {filteredSites.map((site) => {
                 const isSelected = selectedSiteIds.includes(site.id);
-                const assignedTech = technicians.find((tech) => tech.email === site.assignedTechnicianEmail);
+                const assignedTechs = getAssignedTechnicians(site, technicians);
 
                 return (
                   <tr
@@ -738,10 +742,25 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
                       <span className="font-semibold text-slate-800 dark:text-slate-200">{site.elevatorBrand}</span> ({site.elevatorUnits} {t.unitsCount}, {site.floors} {t.floorsCount})
                     </td>
                     <td className="px-3 py-3">
-                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-[11px]">
-                        <UserCheck className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-                        {assignedTech?.name || site.assignedTechnicianEmail.split('@')[0]}
-                      </span>
+                      <div className="flex flex-wrap items-center gap-1 max-w-xs">
+                        {assignedTechs.length > 0 ? (
+                          assignedTechs.map((tech) => (
+                            <span
+                              key={tech.id}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[11px] font-medium"
+                            >
+                              <div className={`w-3.5 h-3.5 rounded-full ${tech.avatarColor || 'bg-blue-600'} text-white text-[9px] font-bold flex items-center justify-center shrink-0`}>
+                                {tech.name[0]}
+                              </div>
+                              <span>{tech.name}</span>
+                            </span>
+                          ))
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[11px]">
+                            {site.assignedTechnicianEmail || 'Ortak'}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-3 py-3 font-mono text-[11px]">
                       {site.accessCode ? (
@@ -1360,8 +1379,9 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
                 return visibleSites.map((site) => {
                   const isChecked = assignedSiteIdsForModal.includes(site.id);
-                  const currentOwner = technicians.find((t) => t.email === site.assignedTechnicianEmail);
-                  const isAssignedToOther = site.assignedTechnicianEmail && site.assignedTechnicianEmail !== assigningTech.email;
+                  const assignedTechs = getAssignedTechnicians(site, technicians);
+                  const otherTechs = assignedTechs.filter((t) => t.email !== assigningTech.email);
+                  const otherTechNames = otherTechs.map((t) => t.name).join(', ');
 
                   return (
                     <div
@@ -1396,12 +1416,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({
 
                       <div className="shrink-0 text-right">
                         {isChecked ? (
-                          <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                            {language === 'en' ? 'Assigned' : 'Atandı'}
-                          </span>
-                        ) : isAssignedToOther ? (
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                              {language === 'en' ? 'Assigned' : 'Atandı'}
+                            </span>
+                            {otherTechs.length > 0 && (
+                              <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400">
+                                +{otherTechNames} {language === 'en' ? 'also assigned' : 'da atandı'}
+                              </span>
+                            )}
+                          </div>
+                        ) : otherTechs.length > 0 ? (
                           <span className="px-2 py-1 rounded-full text-[10px] font-medium bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80">
-                            {language === 'en' ? `Currently: ${currentOwner?.name || 'Other'}` : `Şu an: ${currentOwner?.name || 'Diğer'}`}
+                            {language === 'en' ? `Atandı: ${otherTechNames}` : `Atandı: ${otherTechNames}`}
                           </span>
                         ) : (
                           <span className="px-2 py-1 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">

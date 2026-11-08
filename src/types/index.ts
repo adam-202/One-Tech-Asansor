@@ -51,7 +51,8 @@ export interface BuildingSite {
   elevatorUnits?: number | null; // null/undefined if not yet verified
   elevatorBrand: string; // KONE (predominant), Otis, Schindler, Thyssenkrupp, Mitsubishi, etc.
   elevatorNumbers?: string; // e.g. "L1 (Pass), L2 (Pass), L3 (Service / Freight)"
-  assignedTechnicianEmail: string; // email if private, or 'shared@elevatortech.io' if public
+  assignedTechnicianEmail: string; // primary or comma-separated emails for DB/legacy compatibility
+  assignedTechnicianEmails?: string[]; // list of assigned technician emails (supports multiple members per building)
   managerName: string;
   managerPhone: string;
   accessCode: string;
