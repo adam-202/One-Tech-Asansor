@@ -78,7 +78,6 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
       case 'satellite':
         return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
       case 'dark':
-        return 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
       case 'streets':
       default:
         return 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -89,6 +88,10 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
     if (!mapContainerRef.current) return;
     if (mapInstanceRef.current) return;
 
+    if (mapStyle === 'dark') {
+      mapContainerRef.current.classList.add('map-tiles-dark');
+    }
+
     const map = L.map(mapContainerRef.current, {
       center: defaultCenter,
       zoom: 14,
@@ -97,7 +100,7 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
 
     const tile = L.tileLayer(getTileUrl(mapStyle), {
       maxZoom: 19,
-      attribution: '© OpenStreetMap | Esri',
+      attribution: '© OpenStreetMap contributors | Esri',
     }).addTo(map);
 
     tileLayerRef.current = tile;
@@ -117,6 +120,13 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
   useEffect(() => {
     if (!tileLayerRef.current) return;
     tileLayerRef.current.setUrl(getTileUrl(mapStyle));
+    if (mapContainerRef.current) {
+      if (mapStyle === 'dark') {
+        mapContainerRef.current.classList.add('map-tiles-dark');
+      } else {
+        mapContainerRef.current.classList.remove('map-tiles-dark');
+      }
+    }
   }, [mapStyle]);
 
   useEffect(() => {
@@ -354,7 +364,10 @@ export const InteractiveRealMap: React.FC<InteractiveRealMapProps> = ({
   return (
     <div className="relative w-full h-[520px] rounded-2xl overflow-hidden border border-slate-300 dark:border-slate-800 shadow-md">
       {/* 1. Leaflet Real Tile Map Viewport */}
-      <div ref={mapContainerRef} className="w-full h-full z-0" />
+      <div
+        ref={mapContainerRef}
+        className={`w-full h-full z-0 ${mapStyle === 'dark' ? 'map-tiles-dark' : ''}`}
+      />
 
       {/* 2. Top-Left Floating Controls: Navigation + Adjust Mode */}
       <div className="absolute top-3 left-3 z-10 flex flex-wrap items-center gap-2 pointer-events-auto">
