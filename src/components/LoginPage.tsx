@@ -120,12 +120,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     }
   };
 
-  const fillQuickLogin = (tech: Technician) => {
-    setEmail(tech.email);
-    setPassword(tech.password || (tech.isAdmin || tech.email === 'adam.osama60@gmail.com' ? 'onetech2026' : 'tech123'));
-    setError(null);
-  };
-
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col justify-between relative overflow-hidden text-slate-100">
       {/* Dynamic Background Glows & Elevator Grid Line Accents */}
@@ -261,42 +255,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({
             </button>
           </form>
 
-          {/* Quick Demo Access Pills */}
-          <div className="pt-2 border-t border-slate-800/80 space-y-2.5">
-            <p className="text-[11px] font-semibold text-slate-400 text-center uppercase tracking-wider">
-              {language === 'en' ? 'Quick Demo Login Accounts' : 'Hızlı Giriş Hesapları'}
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {technicians.slice(0, 3).map((tech) => {
-                const isAdmin = tech.isAdmin || tech.email === 'adam.osama60@gmail.com';
-                return (
-                  <button
-                    key={tech.id}
-                    type="button"
-                    onClick={() => fillQuickLogin(tech)}
-                    className="p-2.5 rounded-xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 hover:border-blue-500/50 text-left transition-all group flex items-center gap-2"
-                  >
-                    <div className={`w-7 h-7 rounded-lg ${tech.avatarColor || 'bg-blue-600'} text-white font-bold text-xs flex items-center justify-center shrink-0`}>
-                      {tech.name[0]}
-                    </div>
-                    <div className="truncate">
-                      <div className="flex items-center gap-1.5 truncate">
-                        <span className="text-xs font-semibold text-slate-200 truncate">{tech.name}</span>
-                        {isAdmin && (
-                          <span className="px-1 py-0.2 rounded text-[9px] bg-blue-500/20 text-blue-300 font-mono">
-                            Admin
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[10px] text-slate-400 block truncate font-mono">
-                        {tech.email.split('@')[0]}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-            <p className="text-[10px] text-slate-500 text-center">
+          {/* Admin Managed Note */}
+          <div className="pt-3 border-t border-slate-800/80">
+            <p className="text-[11px] text-slate-500 text-center">
               {language === 'en'
                 ? 'Only the Admin (Adam) can create or update employee credentials in the Admin Portal.'
                 : 'Yalnızca Yönetici (Adam) Yönetim Panelinden personel hesapları oluşturabilir ve şifreleri düzenleyebilir.'}
