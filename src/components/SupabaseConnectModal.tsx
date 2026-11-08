@@ -53,7 +53,7 @@ export const SupabaseConnectModal: React.FC<SupabaseConnectModalProps> = ({
   const [url, setUrl] = useState(DEFAULT_SUPABASE_URL);
   const [anonKey, setAnonKey] = useState('');
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string; needsSchema?: boolean } | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<string | null>(null);
   const [copiedSchema, setCopiedSchema] = useState(false);
@@ -454,6 +454,27 @@ CREATE POLICY "Allow anon access visits" ON public.visits FOR ALL TO anon USING 
                           ? 'Supabase bulut bağlantısı aktif! Artık tüm binalar, bakımlar ve yeni üyeler gerçek zamanlı olarak eşitlenecek.'
                           : 'Supabase is now active! All visits and site edits will sync in real time.'}
                       </p>
+                    )}
+                    {testResult.needsSchema && (
+                      <div className="pt-2 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('schema')}
+                          className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                        >
+                          <FileCode className="w-3.5 h-3.5" />
+                          <span>{language === 'tr' ? 'SQL Şemasını Gör ve Kopyala' : 'View & Copy SQL Schema'}</span>
+                        </button>
+                        <a
+                          href={`https://supabase.com/dashboard/project/${DEFAULT_SUPABASE_PROJECT_ID}/sql/new`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                        >
+                          <span>{language === 'tr' ? 'Supabase SQL Editörünü Aç' : 'Open Supabase SQL Editor'}</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
                     )}
                   </div>
                 </div>
