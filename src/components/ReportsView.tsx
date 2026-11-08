@@ -38,8 +38,9 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
   sites,
   currentTechnician,
   technicians = TECHNICIANS,
-  language = 'en',
+  language = 'tr',
 }) => {
+  const t = translations[language];
   const activeTechnicians: Technician[] = technicians && technicians.length > 0 ? technicians : TECHNICIANS;
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>('daily');
   const [selectedTechEmail, setSelectedTechEmail] = useState<string>(currentTechnician.email);
@@ -77,7 +78,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
   }, [targetSites, todayStr]);
 
   const selectedTech = activeTechnicians.find((t) => t.email === selectedTechEmail) || {
-    name: 'All Field Specialists',
+    name: language === 'tr' ? 'Tüm Saha Ekibi' : 'All Field Specialists',
     email: 'team@elevatormaintenance.com',
   };
 
@@ -88,7 +89,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
   const emailReport = useMemo(() => {
     const summaryData: ReportSummaryData = {
       period: reportPeriod,
-      dateStr: new Date().toLocaleDateString('en-US', {
+      dateStr: new Date().toLocaleDateString(language === 'tr' ? 'tr-TR' : 'en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -142,15 +143,19 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
-              <span>Auditing & Automated Dispatch Reporting</span>
+              <span>{language === 'tr' ? 'Denetim & Otomatik Sevkiyat Raporlaması' : 'Auditing & Automated Dispatch Reporting'}</span>
               <span aria-hidden="true">·</span>
-              <span className="font-mono text-slate-800 dark:text-slate-200 font-semibold">October 2026 Cycle</span>
+              <span className="font-mono text-slate-800 dark:text-slate-200 font-semibold">
+                {language === 'tr' ? 'Ekim 2026 Dönemi' : 'October 2026 Cycle'}
+              </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-              Reports, Excel Spreadsheets & Email Generator
+              {language === 'tr' ? 'Raporlar, Excel Tabloları & E-posta Bildirimleri' : 'Reports, Excel Spreadsheets & Email Generator'}
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-0.5">
-              Export timestamped completion logs to Excel/CSV or dispatch structured daily, weekly, and monthly email summaries.
+              {language === 'tr'
+                ? 'Tamamlanan bakım kayıtlarını Excel/CSV olarak indirin ya da günlük, haftalık ve aylık e-posta özetleri oluşturun.'
+                : 'Export timestamped completion logs to Excel/CSV or dispatch structured daily, weekly, and monthly email summaries.'}
             </p>
           </div>
 
@@ -161,7 +166,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
               className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer"
             >
               <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>Export Master Excel/CSV</span>
+              <span>{language === 'tr' ? 'Tüm Veritabanını İndir (Excel/CSV)' : 'Export Master Excel/CSV'}</span>
             </button>
           </div>
         </div>
@@ -170,48 +175,54 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5 pt-4 border-t border-slate-100 dark:border-slate-800">
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
             <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
-              <span>Total Contracts</span>
+              <span>{language === 'tr' ? 'Sözleşmeli Binalar' : 'Total Contracts'}</span>
               <Building2 className="w-3.5 h-3.5 text-slate-400" />
             </div>
             <p className="text-2xl font-bold text-slate-900 dark:text-white font-mono tabular-nums">
               {sites.length}
             </p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">100% Monthly Target</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              {language === 'tr' ? '%100 Aylık Hedef' : '100% Monthly Target'}
+            </p>
           </div>
 
           <div className="p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-800/60">
             <div className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider mb-1 flex items-center justify-between">
-              <span>Visited & Verified</span>
+              <span>{language === 'tr' ? 'Bakımı Yapılan' : 'Visited & Verified'}</span>
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100 font-mono tabular-nums">
               {sites.filter((s) => s.lastVisit).length}
             </p>
             <p className="text-[11px] text-emerald-700 dark:text-emerald-400">
-              {Math.round((sites.filter((s) => s.lastVisit).length / sites.length) * 100)}% Month Completion
+              %{Math.round((sites.filter((s) => s.lastVisit).length / (sites.length || 1)) * 100)} {language === 'tr' ? 'Tamamlanma' : 'Month Completion'}
             </p>
           </div>
 
           <div className="p-3.5 rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-800/60">
             <div className="text-[11px] font-semibold text-amber-800 dark:text-amber-300 uppercase tracking-wider mb-1 flex items-center justify-between">
-              <span>Pending Sites</span>
+              <span>{language === 'tr' ? 'Bakım Bekleyen' : 'Pending Sites'}</span>
               <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             </div>
             <p className="text-2xl font-bold text-amber-900 dark:text-amber-100 font-mono tabular-nums">
               {sites.filter((s) => !s.lastVisit).length}
             </p>
-            <p className="text-[11px] text-amber-700 dark:text-amber-400">Queued for Route Optimizer</p>
+            <p className="text-[11px] text-amber-700 dark:text-amber-400">
+              {language === 'tr' ? 'Rota optimizasyonu kuyruğunda' : 'Queued for Route Optimizer'}
+            </p>
           </div>
 
           <div className="p-3.5 rounded-xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-800/60">
             <div className="text-[11px] font-semibold text-rose-800 dark:text-rose-300 uppercase tracking-wider mb-1 flex items-center justify-between">
-              <span>Safety Attention</span>
+              <span>{language === 'tr' ? 'Arıza / Müdahale' : 'Safety Attention'}</span>
               <AlertOctagon className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
             </div>
             <p className="text-2xl font-bold text-rose-900 dark:text-rose-100 font-mono tabular-nums">
               {sites.filter((s) => s.lastVisit && s.lastVisit.status !== 'passed').length}
             </p>
-            <p className="text-[11px] text-rose-700 dark:text-rose-400">Minor defects & repairs</p>
+            <p className="text-[11px] text-rose-700 dark:text-rose-400">
+              {language === 'tr' ? 'Kusurlar & onarımlar' : 'Minor defects & repairs'}
+            </p>
           </div>
         </div>
       </div>
@@ -220,7 +231,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
       <div className="bg-white dark:bg-slate-900/90 rounded-2xl p-5 border border-slate-200/90 dark:border-slate-800 shadow-xs backdrop-blur-md">
         <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
           <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-          <span>Field Team Monthly Portfolio Breakdown</span>
+          <span>{language === 'tr' ? 'Saha Ekibi Aylık Bakım Dağılımı' : 'Field Team Monthly Portfolio Breakdown'}</span>
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -250,8 +261,10 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between text-xs font-mono mb-1.5">
-                  <span className="text-slate-600 dark:text-slate-400">{techVisited}/{techSites.length} Visited</span>
-                  <span className="font-bold text-slate-900 dark:text-white">{techRate.toFixed(0)}%</span>
+                  <span className="text-slate-600 dark:text-slate-400">
+                    {techVisited}/{techSites.length} {language === 'tr' ? 'Tamamlandı' : 'Visited'}
+                  </span>
+                  <span className="font-bold text-slate-900 dark:text-white">%{techRate.toFixed(0)}</span>
                 </div>
 
                 {/* Progress Bar */}
@@ -274,19 +287,19 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           <div className="bg-white dark:bg-slate-900/90 rounded-2xl p-5 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-4 backdrop-blur-md">
             <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
               <Mail className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span>Email Report Configuration</span>
+              <span>{language === 'tr' ? 'E-posta Rapor Yapılandırması' : 'Email Report Configuration'}</span>
             </h2>
 
             {/* Frequency Selector */}
             <div>
               <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                Report Frequency / Period
+                {language === 'tr' ? 'Rapor Periyodu / Aralığı' : 'Report Frequency / Period'}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { id: 'daily' as const, label: 'Daily Route' },
-                  { id: 'weekly' as const, label: 'Weekly Summary' },
-                  { id: 'monthly' as const, label: 'Monthly Audit' },
+                  { id: 'daily' as const, label: language === 'tr' ? 'Günlük Rota' : 'Daily Route' },
+                  { id: 'weekly' as const, label: language === 'tr' ? 'Haftalık Özet' : 'Weekly Summary' },
+                  { id: 'monthly' as const, label: language === 'tr' ? 'Aylık Denetim' : 'Monthly Audit' },
                 ].map((item) => (
                   <button
                     key={item.id}
@@ -306,17 +319,19 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
             {/* Target Technician Scope */}
             <div>
               <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Technician Scope
+                {language === 'tr' ? 'Teknisyen Kapsamı' : 'Technician Scope'}
               </label>
               <select
                 value={selectedTechEmail}
                 onChange={(e) => setSelectedTechEmail(e.target.value)}
                 className="w-full text-xs p-2.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-hidden font-medium cursor-pointer"
               >
-                <option value="all">Entire Maintenance Team ({sites.length} sites)</option>
+                <option value="all">
+                  {language === 'tr' ? `Tüm Bakım Ekibi (${sites.length} bina)` : `Entire Maintenance Team (${sites.length} sites)`}
+                </option>
                 {activeTechnicians.map((t) => (
                   <option key={t.id} value={t.email}>
-                    {t.name} ({t.assignedCount} sites)
+                    {t.name} ({t.assignedCount} {language === 'tr' ? 'bina' : 'sites'})
                   </option>
                 ))}
               </select>
@@ -325,7 +340,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
             {/* Recipient Email Address */}
             <div>
               <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-                Recipient Email (Supervisor / Owner)
+                {language === 'tr' ? 'Alıcı E-posta (Yönetici / Müşteri)' : 'Recipient Email (Supervisor / Owner)'}
               </label>
               <input
                 type="email"
@@ -343,7 +358,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                 className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.98] rounded-xl shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Open in Email Client (Mailto)</span>
+                <span>{language === 'tr' ? 'E-posta Programında Aç (Mailto)' : 'Open in Email Client (Mailto)'}</span>
               </a>
 
               <button
@@ -353,12 +368,14 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                 {copiedSuccess ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span className="text-emerald-700 dark:text-emerald-300">Copied to Clipboard!</span>
+                    <span className="text-emerald-700 dark:text-emerald-300">
+                      {language === 'tr' ? 'Panoya Kopyalandı!' : 'Copied to Clipboard!'}
+                    </span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3.5 h-3.5" />
-                    <span>Copy Formatted Text</span>
+                    <span>{language === 'tr' ? 'Rapor Metnini Kopyala' : 'Copy Formatted Text'}</span>
                   </>
                 )}
               </button>
@@ -369,11 +386,13 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           <div className="bg-white dark:bg-slate-900/90 rounded-2xl p-5 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3 backdrop-blur-md">
             <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
               <Download className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>Spreadsheet Downloads (Excel & Sheets)</span>
+              <span>{language === 'tr' ? 'Tablo İndirmeleri (Excel & CSV)' : 'Spreadsheet Downloads (Excel & Sheets)'}</span>
             </h2>
 
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              Generates RFC 4180 compliant CSV files with full audit timestamps, safety checklist results, building contacts, and access codes.
+              {language === 'tr'
+                ? 'Tarih-saat damgalı bakım kayıtları, emniyet kontrol sonuçları, yönetici bilgileri ve kapı kodlarını içeren RFC 4180 uyumlu CSV dosyası oluşturur.'
+                : 'Generates RFC 4180 compliant CSV files with full audit timestamps, safety checklist results, building contacts, and access codes.'}
             </p>
 
             <div className="space-y-2 pt-1">
@@ -381,7 +400,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                 onClick={handleExportVisitedCsv}
                 className="w-full py-2 px-3 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-between transition-colors cursor-pointer"
               >
-                <span>Visited Sites Only ({visitedSites.length})</span>
+                <span>{language === 'tr' ? `Yalnızca Bakımı Yapılanlar (${visitedSites.length})` : `Visited Sites Only (${visitedSites.length})`}</span>
                 <Download className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
               </button>
 
@@ -389,7 +408,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
                 onClick={handleExportPendingCsv}
                 className="w-full py-2 px-3 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center justify-between transition-colors cursor-pointer"
               >
-                <span>Pending Route Sites ({pendingSites.length})</span>
+                <span>{language === 'tr' ? `Bakım Bekleyen Binalar (${pendingSites.length})` : `Pending Route Sites (${pendingSites.length})`}</span>
                 <Download className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
               </button>
             </div>
@@ -403,11 +422,11 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-blue-400" />
                 <span className="text-xs font-bold text-white uppercase tracking-wider">
-                  Live Email Report Preview
+                  {language === 'tr' ? 'Canlı E-posta Rapor Önizlemesi' : 'Live Email Report Preview'}
                 </span>
               </div>
               <span className="text-[11px] font-mono text-slate-400">
-                To: {recipientEmail}
+                {language === 'tr' ? 'Alıcı:' : 'To:'} {recipientEmail}
               </span>
             </div>
 

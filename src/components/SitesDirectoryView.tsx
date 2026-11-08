@@ -931,6 +931,7 @@ export const SitesDirectoryView: React.FC<SitesDirectoryViewProps> = ({
         existingSites={sites}
         currentTechnician={currentTechnician}
         onBatchSave={onBatchImport}
+        language={language}
       />
     </div>
   );

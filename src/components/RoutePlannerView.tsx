@@ -246,17 +246,21 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
           <div>
             <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
               <span className="font-semibold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
-                D3 Geo Projected Visualization
+                {language === 'tr' ? 'D3 Coğrafi Harita Projeksiyonu' : 'D3 Geo Projected Visualization'}
               </span>
               <span aria-hidden="true">·</span>
-              <span className="text-emerald-700 dark:text-emerald-400 font-medium">TSP 2-Opt Optimization</span>
+              <span className="text-emerald-700 dark:text-emerald-400 font-medium">
+                {language === 'tr' ? 'TSP 2-Opt Akıllı Rota Optimizasyonu' : 'TSP 2-Opt Optimization'}
+              </span>
             </div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-              <span>Technician Route Planner:</span>
+              <span>{language === 'tr' ? 'Teknisyen Rota Planlayıcısı:' : 'Technician Route Planner:'}</span>
               <span className="text-blue-600 dark:text-blue-400 font-medium">{currentTechnician.name}</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-0.5">
-              Visualizes assigned buildings on an interactive D3 Mercator projection and computes an optimized visitation order to eliminate backtracking.
+              {language === 'tr'
+                ? 'Atanan binaları interaktif Mercator haritasında gösterir ve gereksiz gidiş-dönüşleri önleyerek en kısa rota sırasını hesaplar.'
+                : 'Visualizes assigned buildings on an interactive D3 Mercator projection and computes an optimized visitation order to eliminate backtracking.'}
             </p>
           </div>
 
@@ -271,7 +275,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
                   ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/60 shadow-xs'
                   : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
               }`}
-              title={userGps ? `GPS Live (Accuracy ±${gpsAccuracy || 10}m)` : 'Access Device GPS Location'}
+              title={userGps ? (language === 'tr' ? `Canlı GPS (Hassasiyet ±${gpsAccuracy || 10}m)` : `GPS Live (Accuracy ±${gpsAccuracy || 10}m)`) : (language === 'tr' ? 'Cihaz Konumuna Eriş' : 'Access Device GPS Location')}
             >
               <Navigation className={`w-3.5 h-3.5 ${isLocating ? 'animate-spin text-blue-600' : userGps ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'}`} />
               <span>
@@ -285,20 +289,20 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
             <button
               onClick={handleSuggestOptimizedOrder}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-md shadow-blue-600/20 active:scale-95 transition-all cursor-pointer"
-              title="Compute shortest Hamiltonian visitation sequence"
+              title={language === 'tr' ? 'En kısa rotayı otomatik sırala' : 'Compute shortest Hamiltonian visitation sequence'}
             >
               <Sparkles className="w-4 h-4 text-blue-200" />
-              <span>Suggest Optimized Order</span>
+              <span>{language === 'tr' ? 'Rotayı Optimize Et' : 'Suggest Optimized Order'}</span>
             </button>
 
             <button
               onClick={handleInvertRouteOrder}
               disabled={currentStops.length < 2}
               className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-all disabled:opacity-40 border border-slate-200 dark:border-slate-700 cursor-pointer"
-              title="Reverse visitation direction"
+              title={language === 'tr' ? 'Ziyaret yönünü tersine çevir' : 'Reverse visitation direction'}
             >
               <ArrowLeftRight className="w-3.5 h-3.5" />
-              <span>Invert Route</span>
+              <span>{language === 'tr' ? 'Rotayı Tersine Çevir' : 'Invert Route'}</span>
             </button>
 
             <a
@@ -306,7 +310,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-500 text-white text-xs font-semibold transition-all active:scale-95 shadow-sm"
-              title="Open full waypoint sequence in Google Maps app"
+              title={language === 'tr' ? 'Tüm durakları Google Haritalar uygulamasında aç' : 'Open full waypoint sequence in Google Maps app'}
             >
               <Compass className="w-4 h-4 text-blue-400 dark:text-blue-100" />
               <span>
@@ -324,7 +328,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
           {/* Target Cluster Neighborhood */}
           <div>
             <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-              Territory Zone
+              {language === 'tr' ? 'Bölge / Mahalle' : 'Territory Zone'}
             </label>
             <select
               value={selectedNeighborhood}
@@ -333,7 +337,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
             >
               {neighborhoods.map((nh) => (
                 <option key={nh} value={nh}>
-                  {nh === 'All' ? 'All Territories & Neighborhoods' : nh}
+                  {nh === 'All' ? (language === 'tr' ? 'Tüm Bölgeler & Mahalleler' : 'All Territories & Neighborhoods') : nh}
                 </option>
               ))}
             </select>
@@ -342,7 +346,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
           {/* Technician Assignment Scope */}
           <div>
             <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-              Assignment Scope
+              {language === 'tr' ? 'Atama Kapsamı' : 'Assignment Scope'}
             </label>
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/90 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
               <button
@@ -353,7 +357,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                My Sites Only
+                {language === 'tr' ? 'Bana Atananlar' : 'My Sites Only'}
               </button>
               <button
                 onClick={() => setOnlyMySites(false)}
@@ -363,7 +367,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                All Team ({sites.length})
+                {language === 'tr' ? `Tüm Ekip (${sites.length})` : `All Team (${sites.length})`}
               </button>
             </div>
           </div>
@@ -371,7 +375,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
           {/* Daily Stops Target Slider */}
           <div>
             <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
-              Stops Per Shift: <span className="font-mono text-slate-900 dark:text-white font-bold">{targetBatchSize} Sites</span>
+              {language === 'tr' ? 'Vardiya Başı Durak:' : 'Stops Per Shift:'} <span className="font-mono text-slate-900 dark:text-white font-bold">{targetBatchSize} {language === 'tr' ? 'Bina' : 'Sites'}</span>
             </label>
             <input
               type="range"
@@ -385,9 +389,11 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
 
           {/* Unvisited Candidates in Territory */}
           <div className="text-right sm:text-left lg:text-right">
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Pending In Selected Zone</span>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
+              {language === 'tr' ? 'Seçili Bölgede Bekleyen' : 'Pending In Selected Zone'}
+            </span>
             <span className="text-sm font-semibold font-mono text-slate-900 dark:text-white">
-              {unvisitedCandidateSites.length} unvisited sites
+              {unvisitedCandidateSites.length} {language === 'tr' ? 'bakım bekleyen bina' : 'unvisited sites'}
             </span>
           </div>
         </div>
@@ -399,24 +405,28 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-blue-500/20 text-blue-300 border border-blue-400/30">
-                Suggested Visitation Order
+                {language === 'tr' ? 'Önerilen Ziyaret Sırası' : 'Suggested Visitation Order'}
               </span>
               <span className="text-xs text-slate-300">
-                {currentTechnician.name}’s Route Sequence
+                {currentTechnician.name} {language === 'tr' ? 'Rota Dizilimi' : '’s Route Sequence'}
               </span>
             </div>
             <div className="flex flex-wrap items-center gap-3 text-sm">
               <span className="font-bold text-white font-mono text-base">
-                {currentStops.length} Stops Sequence
+                {currentStops.length} {language === 'tr' ? 'Duraklı Rota' : 'Stops Sequence'}
               </span>
               <span className="text-slate-400">·</span>
               <span className="text-emerald-400 font-semibold font-mono flex items-center gap-1">
                 <TrendingDown className="w-4 h-4" />
-                <span>{optimizationMetrics.savedKm > 0 ? `${optimizationMetrics.savedPercent}% Distance Saved` : 'Optimized Path'}</span>
+                <span>
+                  {optimizationMetrics.savedKm > 0
+                    ? (language === 'tr' ? `%${optimizationMetrics.savedPercent} Mesafe Tasarrufu` : `${optimizationMetrics.savedPercent}% Distance Saved`)
+                    : (language === 'tr' ? 'Optimize Edilmiş Rota' : 'Optimized Path')}
+                </span>
               </span>
               <span className="text-slate-400">·</span>
               <span className="text-slate-300 font-mono text-xs">
-                Total: {totalKm.toFixed(1)} km (~{totalMins} mins drive)
+                {language === 'tr' ? `Toplam: ${totalKm.toFixed(1)} km (~${totalMins} dk sürüş)` : `Total: ${totalKm.toFixed(1)} km (~${totalMins} mins drive)`}
               </span>
             </div>
           </div>
@@ -446,7 +456,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
             ))}
             {currentStops.length > 5 && (
               <span className="text-xs text-slate-400 font-mono px-1">
-                +{currentStops.length - 5} more
+                +{currentStops.length - 5} {language === 'tr' ? 'daha' : 'more'}
               </span>
             )}
           </div>
@@ -479,13 +489,17 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
           <div>
             <p className="text-xs font-bold text-slate-900 dark:text-white">
               {isAllStopsCompleted
-                ? 'All Scheduled Visits Completed For Today!'
-                : `Today's Route Progress: ${completedTodayCount} of ${currentStops.length} Visited`}
+                ? (language === 'tr' ? 'Bugün İçin Planlanan Tüm Bakımlar Tamamlandı!' : 'All Scheduled Visits Completed For Today!')
+                : (language === 'tr'
+                    ? `Bugünkü İlerleme: ${completedTodayCount} / ${currentStops.length} Tamamlandı`
+                    : `Today's Route Progress: ${completedTodayCount} of ${currentStops.length} Visited`)}
             </p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
               {isAllStopsCompleted
-                ? 'All safety inspection checklists recorded. Great work!'
-                : 'Click "Add Visit Log" as you complete each site to record timestamp and checklist.'}
+                ? (language === 'tr' ? 'Tüm güvenlik kontrol listeleri kaydedildi. Harika iş!' : 'All safety inspection checklists recorded. Great work!')
+                : (language === 'tr'
+                    ? 'Her binayı tamamladıkça zaman damgası ve kontrol listesi kaydetmek için "Bakım Kaydı Ekle"ye tıklayın.'
+                    : 'Click "Add Visit Log" as you complete each site to record timestamp and checklist.')}
             </p>
           </div>
         </div>
@@ -496,7 +510,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Re-cluster Next Sites</span>
+            <span>{language === 'tr' ? 'Rotayı Yeniden Sırala' : 'Re-cluster Next Sites'}</span>
           </button>
         </div>
       </div>
@@ -506,22 +520,26 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
         <div className="flex items-center justify-between px-1">
           <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2">
             <Route className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span>Suggested Order Waypoints</span>
+            <span>{language === 'tr' ? 'Planlanan Rota Durakları' : 'Suggested Order Waypoints'}</span>
             <span className="text-xs font-mono font-normal text-slate-400">
-              ({currentStops.length} sequential stops)
+              ({currentStops.length} {language === 'tr' ? 'sıralı durak' : 'sequential stops'})
             </span>
           </h2>
           <span className="text-xs text-slate-500 dark:text-slate-400">
-            2-Opt TSP sequence minimizing drive time
+            {language === 'tr' ? 'Sürüş süresini en aza indiren akıllı TSP sırası' : '2-Opt TSP sequence minimizing drive time'}
           </span>
         </div>
 
         {currentStops.length === 0 ? (
           <div className="bg-white dark:bg-slate-900/90 rounded-2xl p-8 text-center border border-slate-200 dark:border-slate-800 backdrop-blur-md">
             <Building2 className="w-10 h-10 text-slate-400 dark:text-slate-500 mx-auto mb-2" />
-            <h3 className="text-base font-bold text-slate-800 dark:text-white">No Sites In Queue</h3>
+            <h3 className="text-base font-bold text-slate-800 dark:text-white">
+              {language === 'tr' ? 'Kuyrukta Bina Yok' : 'No Sites In Queue'}
+            </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1 mb-4">
-              All sites for the selected filter have already been completed, or none match your criteria.
+              {language === 'tr'
+                ? 'Seçili filtredeki tüm binalar tamamlandı ya da kriterlere uyan bina bulunamadı.'
+                : 'All sites for the selected filter have already been completed, or none match your criteria.'}
             </p>
             <button
               onClick={() => {
@@ -530,7 +548,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
               }}
               className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl cursor-pointer"
             >
-              Reset Filters to All Sites
+              {language === 'tr' ? 'Filtreleri Sıfırla (Tüm Binalar)' : 'Reset Filters to All Sites'}
             </button>
           </div>
         ) : (
@@ -592,15 +610,15 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
                           {isVisited ? (
                             <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1">
                               <CheckCircle2 className="w-3 h-3" />
-                              <span>Visited {stop.site.lastVisit?.date} at {stop.site.lastVisit?.time}</span>
+                              <span>{language === 'tr' ? `Tamamlandı: ${stop.site.lastVisit?.date} ${stop.site.lastVisit?.time}` : `Visited ${stop.site.lastVisit?.date} at ${stop.site.lastVisit?.time}`}</span>
                             </span>
                           ) : isCritical ? (
                             <span className="text-[11px] font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-800/60">
-                              Attention Required
+                              {language === 'tr' ? 'Müdahale Gerekli' : 'Attention Required'}
                             </span>
                           ) : (
                             <span className="text-[11px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800/60">
-                              Stop #{stop.stopNumber} Pending
+                              {language === 'tr' ? `Durak #${stop.stopNumber} Bekliyor` : `Stop #${stop.stopNumber} Pending`}
                             </span>
                           )}
                         </div>
@@ -613,17 +631,19 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
                           </span>
                           <span aria-hidden="true" className="text-slate-400">·</span>
                           <span className="font-mono text-slate-500 dark:text-slate-400">
-                            {idx === 0 ? 'Suggested Starting Point' : `+${stop.distanceFromPrevKm} km (~${stop.estimatedTravelMin} mins drive)`}
+                            {idx === 0
+                              ? (language === 'tr' ? 'Önerilen Başlangıç Noktası' : 'Suggested Starting Point')
+                              : (language === 'tr' ? `+${stop.distanceFromPrevKm} km (~${stop.estimatedTravelMin} dk sürüş)` : `+${stop.distanceFromPrevKm} km (~${stop.estimatedTravelMin} mins drive)`)}
                           </span>
                         </div>
 
                         {/* Elevator Hardware Specs & Access Code */}
                         <div className="flex flex-wrap items-center gap-3 mt-2 text-[11px] text-slate-500 dark:text-slate-400">
                           <span className="font-medium text-slate-700 dark:text-slate-300">
-                            {stop.site.elevatorUnits} Lifts ({stop.site.elevatorBrand})
+                            {stop.site.elevatorUnits} {language === 'tr' ? 'Asansör' : 'Lifts'} ({stop.site.elevatorBrand})
                           </span>
                           <span aria-hidden="true">·</span>
-                          <span>{stop.site.floors} Floors</span>
+                          <span>{stop.site.floors} {language === 'tr' ? 'Kat' : 'Floors'}</span>
                           <span aria-hidden="true">·</span>
                           {stop.site.accessCode ? (
                             <span className="flex items-center gap-1 font-mono text-amber-900 dark:text-amber-200 font-bold bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-1.5 py-0.5 rounded">
@@ -658,7 +678,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
                           onClick={() => handleMoveStop(idx, 'up')}
                           disabled={idx === 0}
                           className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white disabled:opacity-30 transition-colors cursor-pointer"
-                          title="Move stop earlier in sequence"
+                          title={language === 'tr' ? 'Durağı öne taşı' : 'Move stop earlier in sequence'}
                         >
                           <ChevronUp className="w-3.5 h-3.5" />
                         </button>
@@ -666,7 +686,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
                           onClick={() => handleMoveStop(idx, 'down')}
                           disabled={idx === currentStops.length - 1}
                           className="p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white disabled:opacity-30 transition-colors cursor-pointer"
-                          title="Move stop later in sequence"
+                          title={language === 'tr' ? 'Durağı geriye taşı' : 'Move stop later in sequence'}
                         >
                           <ChevronDown className="w-3.5 h-3.5" />
                         </button>
@@ -676,7 +696,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
                       <button
                         onClick={() => setPreviewLocationSite(stop.site)}
                         className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer"
-                        title="Location Preview: Inspect static neighborhood map & geolocation"
+                        title={language === 'tr' ? 'Konum Önizleme: Mahalle haritası ve koordinatları incele' : 'Location Preview: Inspect static neighborhood map & geolocation'}
                       >
                         <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       </button>
@@ -687,7 +707,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-2 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
-                        title="Navigate to this building in Google Maps"
+                        title={language === 'tr' ? 'Bu binaya Google Haritalar ile git' : 'Navigate to this building in Google Maps'}
                       >
                         <Compass className="w-4 h-4" />
                       </a>
@@ -696,7 +716,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
                       <button
                         onClick={() => handleRemoveStop(stop.site.id)}
                         className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 cursor-pointer"
-                        title="Remove from suggested route"
+                        title={language === 'tr' ? 'Önerilen rotadan çıkar' : 'Remove from suggested route'}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -714,7 +734,7 @@ export const RoutePlannerView: React.FC<RoutePlannerViewProps> = ({
                         }`}
                       >
                         <CheckSquare className="w-3.5 h-3.5" />
-                        <span>Add Visit Log</span>
+                        <span>{language === 'tr' ? 'Bakım Kaydı Ekle' : 'Add Visit Log'}</span>
                       </button>
                     </div>
                   </div>
